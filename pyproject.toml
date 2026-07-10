@@ -1,0 +1,26 @@
+[project]
+name = "mkys-tdms-analyzer"
+version = "0.1.0"
+description = "MKYS - TDMS reconciliation and reporting tool"
+readme = "README.md"
+requires-python = ">=3.14"
+
+authors = [
+    { name = "Erdem Güvenç" }
+]
+
+dependencies = [
+    "pandas",
+    "openpyxl",
+    "xlrd",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
