@@ -1,0 +1,12 @@
+from enum import Enum
+
+
+class MovementType(Enum):
+    ENTRY = "ENTRY"
+    CONSUMPTION = "CONSUMPTION"
+    TRANSFER = "TRANSFER"
+    SCRAP = "SCRAP"
+    DONATION = "DONATION"
+    COUNT_SURPLUS = "COUNT_SURPLUS"
+    COUNT_DEFICIT = "COUNT_DEFICIT"
+    OTHER = "OTHER"

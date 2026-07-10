@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from typing import Optional
-
+from analyzer.models.movement_type import MovementType
 
 @dataclass(slots=True)
 class Movement:
@@ -19,7 +19,7 @@ class Movement:
     source: str
 
     # ENTRY / CONSUMPTION / TRANSFER / SCRAP / COUNT vb.
-    movement_type: str
+    movement_type: MovementType
 
     # Hareket tarihi
     movement_date: date
