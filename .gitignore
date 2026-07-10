@@ -216,3 +216,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local test data
+sample_data/raw/
+
+# Excel temporary files
+~$*.xlsx
+~$*.xls
+
+# VS Code
+.vscode/
+
+# Python virtual environment
+.venv/

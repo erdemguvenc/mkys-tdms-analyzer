@@ -2,13 +2,24 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from analyzer.models.movement import Movement
+import pandas as pd
 
 
 class MKYSCsvParser:
     """
-    MKYS CSV dosyalarını okur ve Movement nesnelerine dönüştürür.
+    MKYS CSV dışa aktarımlarını okur.
+
+    Bu sürümde sadece dosya okunur ve DataFrame döndürülür.
     """
 
-    def read(self, file_path: str | Path) -> list[Movement]:
-        raise NotImplementedError
+    def parse(self, file_path: Path) -> pd.DataFrame:
+        """CSV dosyasını okuyup DataFrame olarak döndürür."""
+        return self._read_csv(file_path)
+
+    def _read_csv(self, file_path: Path) -> pd.DataFrame:
+        """CSV dosyasını pandas ile okur."""
+        return pd.read_csv(
+            file_path,
+            sep=";",
+            encoding="cp1254",
+        )
