@@ -142,3 +142,43 @@ def test_large_dataset():
     assert len(result.amount_differences) == 0
     assert len(result.missing_in_tdms) == 0
     assert len(result.missing_in_mkys) == 0
+
+
+def test_engine_returns_consumption_differences() -> None:
+
+    engine = ReconciliationEngine()
+
+    mkys = [
+        Movement(
+            source="MKYS",
+            movement_type=MovementType.CONSUMPTION,
+            movement_date=date(2026, 1, 5),
+            amount=Decimal("500"),
+        )
+    ]
+
+    tdms = [
+        Movement(
+            source="TDMS",
+            movement_type=MovementType.CONSUMPTION,
+            movement_date=date(2026, 1, 31),
+            amount=Decimal("450"),
+        )
+    ]
+
+    result = engine.reconcile(
+        mkys,
+        tdms,
+    )
+
+    assert len(result.consumption_differences) == 1
+
+    difference = result.consumption_differences[0]
+
+    assert difference.year == 2026
+    assert difference.month == 1
+
+    assert difference.mkys_amount == Decimal("500")
+    assert difference.tdms_amount == Decimal("450")
+
+    assert difference.difference == Decimal("50")
