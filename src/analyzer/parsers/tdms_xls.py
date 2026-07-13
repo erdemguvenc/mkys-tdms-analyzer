@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 from pathlib import Path
+from datetime import date,datetime
+from decimal import Decimal
 
 import pandas as pd
 
 from analyzer.constants import tdms_columns as COL
+
+from analyzer.models.movement import Movement
+from analyzer.models.movement_type import MovementType
 
 
 class TDMSXlsParser:
@@ -20,13 +25,13 @@ class TDMSXlsParser:
     def parse(
         self,
         file_path: Path,
-    ) -> pd.DataFrame:
+    ) -> list[Movement]:
 
         df = self._read_xls(file_path)
 
         self._validate_columns(df)
 
-        return df
+        return self._create_movements(df)
 
     def _read_xls(
         self,
@@ -77,6 +82,13 @@ class TDMSXlsParser:
             .str.strip()
         )
 
+        # Tarihi olmayan veya geçersiz satırları kaldır
+        df = df[
+            df[COL.DATE]
+            .astype(str)
+            .str.match(r"\d{2}\.\d{2}\.\d{4}", na=False)
+        ]
+
         return df
 
     def _validate_columns(
@@ -94,3 +106,80 @@ class TDMSXlsParser:
             raise ValueError(
                 f"Eksik TDMS sütunları: {', '.join(missing)}"
             )
+        
+
+    def _create_movements(
+        self,
+        df: pd.DataFrame,
+    ) -> list[Movement]:
+        
+        for index, row in df.iterrows():
+            print(index, repr(row[COL.DATE]))
+
+        return [
+            self._row_to_movement(row)
+            for _, row in df.iterrows()
+        ]
+       
+
+    def _row_to_movement(
+        self,
+        row: pd.Series,
+    ) -> Movement:
+
+        debit = Decimal(str(row[COL.DEBIT] or 0))
+        credit = Decimal(str(row[COL.CREDIT] or 0))
+
+        amount = debit if debit > 0 else credit
+
+        return Movement(
+            source="TDMS",
+
+            movement_type=MovementType.ENTRY,
+
+            movement_date=self._parse_date(
+                row[COL.DATE]
+            ),
+
+            tif_no=str(row[COL.TIF_NO]),
+
+            voucher_no=str(row[COL.VOUCHER_NO]),
+
+            invoice_no=str(row[COL.INVOICE_NO]),
+
+            amount=amount,
+
+            description=str(row[COL.DESCRIPTION]),
+
+            supplier=str(row[COL.SUPPLIER]),
+        )   
+    
+
+    def _parse_date(
+        self,
+        value: str,
+    ) -> date:
+
+        return datetime.strptime(
+            str(value).strip(),
+            "%d.%m.%Y",
+        ).date()
+    
+
+    def _parse_decimal(
+        self,
+        value: object,
+    ) -> Decimal:
+
+        text = str(value).strip()
+
+        if (
+            not text
+            or text.lower() == "nan"
+        ):
+            return Decimal("0")
+
+        text = text.replace(".", "")
+        text = text.replace(",", ".")
+
+        return Decimal(text)

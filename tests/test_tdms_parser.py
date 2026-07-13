@@ -1,54 +1,74 @@
+from decimal import Decimal
 from pathlib import Path
 
-import pandas as pd
-
+from analyzer.models.movement import Movement
+from analyzer.models.movement_type import MovementType
 from analyzer.parsers.tdms_xls import TDMSXlsParser
-from analyzer.constants.tdms_columns import REQUIRED_COLUMNS
-from analyzer.constants import tdms_columns as COL
 
 
-def test_parser_reads_xls() -> None:
+def test_parser_returns_movements() -> None:
     parser = TDMSXlsParser()
 
-    df = parser.parse(
+    movements = parser.parse(
         Path("sample_data/raw/rapor.xls")
     )
 
-    assert isinstance(df, pd.DataFrame)
-    assert not df.empty
+    assert len(movements) > 0
+    assert isinstance(movements[0], Movement)
 
-def test_print_first_rows() -> None:
+
+def test_first_movement_has_required_fields() -> None:
     parser = TDMSXlsParser()
 
-    df = parser.parse(
+    movement = parser.parse(
+        Path("sample_data/raw/rapor.xls")
+    )[0]
+
+    assert movement.source == "TDMS"
+    assert movement.movement_type == MovementType.ENTRY
+
+    assert movement.movement_date is not None
+
+    assert movement.voucher_no != ""
+    assert movement.description != ""
+
+    assert isinstance(movement.amount, Decimal)
+
+
+def test_all_movements_have_dates() -> None:
+    parser = TDMSXlsParser()
+
+    movements = parser.parse(
         Path("sample_data/raw/rapor.xls")
     )
 
-    print(df.head(15).to_string())
+    assert all(
+        m.movement_date is not None
+        for m in movements
+    )
 
 
-def test_required_columns_exist():
-
+def test_all_movements_have_amount() -> None:
     parser = TDMSXlsParser()
 
-    df = parser.parse(
+    movements = parser.parse(
         Path("sample_data/raw/rapor.xls")
     )
 
-    for column in REQUIRED_COLUMNS:
-        assert column in df.columns
+    assert all(
+        isinstance(m.amount, Decimal)
+        for m in movements
+    )
 
 
-def test_debug_columns():
+def test_all_movements_are_tdms() -> None:
     parser = TDMSXlsParser()
 
-    df = parser._read_xls(
+    movements = parser.parse(
         Path("sample_data/raw/rapor.xls")
     )
 
-    print("\nREQUIRED_COLUMNS:")
-    print(repr(COL.REQUIRED_COLUMNS))
-
-    print("\nColumn check:")
-    for c in COL.REQUIRED_COLUMNS:
-        print(repr(c), c in df.columns)
+    assert all(
+        m.source == "TDMS"
+        for m in movements
+    )
