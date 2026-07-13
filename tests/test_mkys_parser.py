@@ -1,36 +1,39 @@
 from pathlib import Path
 
-from analyzer.constants.mkys_columns import REQUIRED_COLUMNS
+from analyzer.models.movement import Movement
 from analyzer.parsers.mkys_csv import MKYSCsvParser
 
 
-def test_parser_removes_unnamed_columns() -> None:
+def test_parser_returns_movements() -> None:
     parser = MKYSCsvParser()
 
-    df = parser.parse(
+    movements = parser.parse(
         Path("sample_data/raw/giris_sorgulama.csv")
     )
 
-    assert all(
-        not column.startswith("Unnamed")
-        for column in df.columns
-    )
+    assert isinstance(movements, list)
+    assert len(movements) > 0
+    assert isinstance(movements[0], Movement)
 
-def test_required_columns_exist() -> None:
+
+def test_first_movement_has_required_fields() -> None:
     parser = MKYSCsvParser()
 
-    df = parser.parse(
+    movement = parser.parse(
+        Path("sample_data/raw/giris_sorgulama.csv")
+    )[0]
+
+    assert movement.tif_no
+    assert movement.stock_code
+    assert movement.stock_name
+    assert movement.amount > 0
+
+
+def test_first_row_date() -> None:
+    parser = MKYSCsvParser()
+
+    df = parser._read_csv(
         Path("sample_data/raw/giris_sorgulama.csv")
     )
 
-    for column in REQUIRED_COLUMNS:
-        assert column in df.columns
-
-def test_dataframe_is_not_empty() -> None:
-    parser = MKYSCsvParser()
-
-    df = parser.parse(
-        Path("sample_data/raw/giris_sorgulama.csv")
-    )
-
-    assert len(df) > 0
+    print(df.iloc[0]["Tarih"])

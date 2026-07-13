@@ -53,3 +53,9 @@ class Movement:
 
     # Malzeme Adı
     stock_name: str = ""
+
+    # Tedarikçi
+    supplier: str = ""
+
+    # Miktar
+    quantity: Decimal = Decimal("0")
