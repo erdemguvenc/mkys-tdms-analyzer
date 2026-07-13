@@ -1,12 +1,28 @@
 from __future__ import annotations
 
+from collections import defaultdict
+
 from analyzer.models.movement import Movement
 from analyzer.models.movement_type import MovementType
+
+from .difference import AmountDifference
 
 
 class EntryMatcher:
     """
     ENTRY hareketlerini eşleştirir.
+
+    Eşleştirme önceliği:
+
+        1. TİF No
+        2. Tutar
+
+    Sonuçlar:
+
+        matched
+        missing_in_tdms
+        missing_in_mkys
+        amount_differences
     """
 
     def match(
@@ -17,47 +33,91 @@ class EntryMatcher:
         list[Movement],
         list[Movement],
         list[Movement],
+        list[AmountDifference],
     ]:
 
+        lookup = self._build_lookup(tdms)
+
         matched: list[Movement] = []
-
         missing_tdms: list[Movement] = []
-
-        remaining_tdms = tdms.copy()
+        amount_differences: list[AmountDifference] = []
 
         for mkys_item in mkys:
 
             if mkys_item.movement_type != MovementType.ENTRY:
                 continue
 
-            found = None
+            key = (
+                mkys_item.tif_no,
+                MovementType.ENTRY,
+            )
 
-            for tdms_item in remaining_tdms:
+            candidates = lookup.get(key)
 
-                if tdms_item.movement_type != MovementType.ENTRY:
-                    continue
+            if not candidates:
 
-                if (
-                    mkys_item.tif_no == tdms_item.tif_no
-                    and mkys_item.amount == tdms_item.amount
-                ):
-                    found = tdms_item
-                    break
+                missing_tdms.append(mkys_item)
+                continue
 
-            if found:
+            tdms_item = candidates.pop(0)
+
+            if not candidates:
+                lookup.pop(key)
+
+            if mkys_item.amount == tdms_item.amount:
 
                 matched.append(mkys_item)
 
-                remaining_tdms.remove(found)
-
             else:
 
-                missing_tdms.append(mkys_item)
+                amount_differences.append(
+                    AmountDifference(
+                        mkys=mkys_item,
+                        tdms=tdms_item,
+                    )
+                )
 
-        missing_mkys = remaining_tdms
+        missing_mkys: list[Movement] = []
+
+        for candidates in lookup.values():
+            missing_mkys.extend(candidates)
 
         return (
             matched,
             missing_tdms,
             missing_mkys,
+            amount_differences,
         )
+
+    def _build_lookup(
+        self,
+        movements: list[Movement],
+    ) -> dict[
+        tuple[str | None, MovementType],
+        list[Movement],
+    ]:
+        """
+        TDMS hareketlerini hızlı arama için indeksler.
+
+        Aynı TİF numarasına sahip birden fazla kayıt
+        bulunabileceği için her anahtar bir liste tutar.
+        """
+
+        lookup: dict[
+            tuple[str | None, MovementType],
+            list[Movement],
+        ] = defaultdict(list)
+
+        for movement in movements:
+
+            if movement.movement_type != MovementType.ENTRY:
+                continue
+
+            key = (
+                movement.tif_no,
+                movement.movement_type,
+            )
+
+            lookup[key].append(movement)
+
+        return lookup

@@ -7,9 +7,11 @@ from .result import ReconciliationResult
 
 
 class ReconciliationEngine:
+    """
+    MKYS ve TDMS hareketlerini uzlaştırır.
+    """
 
     def __init__(self) -> None:
-
         self._entry_matcher = EntryMatcher()
 
     def reconcile(
@@ -22,6 +24,7 @@ class ReconciliationEngine:
             matched,
             missing_tdms,
             missing_mkys,
+            amount_differences,
         ) = self._entry_matcher.match(
             mkys,
             tdms,
@@ -31,5 +34,5 @@ class ReconciliationEngine:
             matched=matched,
             missing_in_tdms=missing_tdms,
             missing_in_mkys=missing_mkys,
-            amount_differences=[],
+            amount_differences=amount_differences,
         )
