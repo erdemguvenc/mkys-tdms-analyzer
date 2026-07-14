@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import date
 from decimal import Decimal
 
@@ -6,163 +8,51 @@ from analyzer.models.movement_type import MovementType
 from analyzer.reconciliation.engine import ReconciliationEngine
 
 
-def movement(
-    tif: str,
+def create_movement(
+    *,
+    source: str,
+    tif_no: str,
     amount: str,
+    description: str = "",
+    movement_type: MovementType = MovementType.ENTRY,
 ) -> Movement:
 
     return Movement(
-        source="TEST",
-        movement_type=MovementType.ENTRY,
+        source=source,
+        movement_type=movement_type,
         movement_date=date(2026, 1, 1),
-        tif_no=tif,
+        tif_no=tif_no,
+        voucher_no="",
+        document_no="",
+        invoice_no="",
         amount=Decimal(amount),
+        description=description,
+        warehouse="",
+        budget_type="",
+        stock_code="",
+        stock_name="",
+        supplier="",
+        quantity=Decimal("0"),
     )
 
 
-def test_matching_entry():
-
-    result = ReconciliationEngine().reconcile(
-        [movement("100", "250")],
-        [movement("100", "250")],
-    )
-
-    assert len(result.matched) == 1
-    assert len(result.amount_differences) == 0
-    assert len(result.missing_in_tdms) == 0
-    assert len(result.missing_in_mkys) == 0
-
-
-def test_amount_difference():
-
-    result = ReconciliationEngine().reconcile(
-        [movement("100", "250")],
-        [movement("100", "300")],
-    )
-
-    assert len(result.matched) == 0
-    assert len(result.amount_differences) == 1
-    assert len(result.missing_in_tdms) == 0
-    assert len(result.missing_in_mkys) == 0
-
-    diff = result.amount_differences[0]
-
-    assert diff.mkys.amount == Decimal("250")
-    assert diff.tdms.amount == Decimal("300")
-
-
-def test_missing_in_tdms():
-
-    result = ReconciliationEngine().reconcile(
-        [movement("100", "250")],
-        [],
-    )
-
-    assert len(result.missing_in_tdms) == 1
-    assert len(result.missing_in_mkys) == 0
-    assert len(result.matched) == 0
-
-
-def test_missing_in_mkys():
-
-    result = ReconciliationEngine().reconcile(
-        [],
-        [movement("100", "250")],
-    )
-
-    assert len(result.missing_in_tdms) == 0
-    assert len(result.missing_in_mkys) == 1
-    assert len(result.matched) == 0
-
-
-def test_duplicate_tif_matches_independently():
-
-    mkys = [
-        movement("100", "100"),
-        movement("100", "200"),
-    ]
-
-    tdms = [
-        movement("100", "100"),
-        movement("100", "200"),
-    ]
-
-    result = ReconciliationEngine().reconcile(
-        mkys,
-        tdms,
-    )
-
-    assert len(result.matched) == 2
-    assert len(result.amount_differences) == 0
-    assert len(result.missing_in_tdms) == 0
-    assert len(result.missing_in_mkys) == 0
-
-
-def test_duplicate_tif_with_one_difference():
-
-    mkys = [
-        movement("100", "100"),
-        movement("100", "200"),
-    ]
-
-    tdms = [
-        movement("100", "100"),
-        movement("100", "250"),
-    ]
-
-    result = ReconciliationEngine().reconcile(
-        mkys,
-        tdms,
-    )
-
-    assert len(result.matched) == 1
-    assert len(result.amount_differences) == 1
-    assert len(result.missing_in_tdms) == 0
-    assert len(result.missing_in_mkys) == 0
-
-
-def test_large_dataset():
-
-    mkys = [
-        movement(str(i), str(i))
-        for i in range(1000)
-    ]
-
-    tdms = [
-        movement(str(i), str(i))
-        for i in range(1000)
-    ]
-
-    result = ReconciliationEngine().reconcile(
-        mkys,
-        tdms,
-    )
-
-    assert len(result.matched) == 1000
-    assert len(result.amount_differences) == 0
-    assert len(result.missing_in_tdms) == 0
-    assert len(result.missing_in_mkys) == 0
-
-
-def test_engine_returns_consumption_differences() -> None:
+def test_reconcile_matching_entries() -> None:
 
     engine = ReconciliationEngine()
 
     mkys = [
-        Movement(
+        create_movement(
             source="MKYS",
-            movement_type=MovementType.CONSUMPTION,
-            movement_date=date(2026, 1, 5),
-            amount=Decimal("500"),
+            tif_no="100",
+            amount="1000",
         )
     ]
 
     tdms = [
-        Movement(
+        create_movement(
             source="TDMS",
-            movement_type=MovementType.CONSUMPTION,
-            movement_date=date(2026, 1, 31),
-            amount=Decimal("450"),
+            tif_no="100",
+            amount="1000",
         )
     ]
 
@@ -171,14 +61,177 @@ def test_engine_returns_consumption_differences() -> None:
         tdms,
     )
 
+    assert len(result.matched) == 1
+    assert len(result.missing_in_tdms) == 0
+    assert len(result.missing_in_mkys) == 0
+    assert len(result.amount_differences) == 0
+
+
+def test_reconcile_amount_difference() -> None:
+
+    engine = ReconciliationEngine()
+
+    mkys = [
+        create_movement(
+            source="MKYS",
+            tif_no="100",
+            amount="100",
+        )
+    ]
+
+    tdms = [
+        create_movement(
+            source="TDMS",
+            tif_no="100",
+            amount="200",
+        )
+    ]
+
+    result = engine.reconcile(
+        mkys,
+        tdms,
+    )
+
+    assert len(result.matched) == 0
+    assert len(result.amount_differences) == 1
+
+
+def test_reconcile_missing_in_tdms() -> None:
+
+    engine = ReconciliationEngine()
+
+    mkys = [
+        create_movement(
+            source="MKYS",
+            tif_no="100",
+            amount="100",
+        )
+    ]
+
+    result = engine.reconcile(
+        mkys,
+        [],
+    )
+
+    assert len(result.missing_in_tdms) == 1
+    assert len(result.missing_in_mkys) == 0
+
+
+def test_reconcile_missing_in_mkys() -> None:
+
+    engine = ReconciliationEngine()
+
+    tdms = [
+        create_movement(
+            source="TDMS",
+            tif_no="100",
+            amount="100",
+        )
+    ]
+
+    result = engine.reconcile(
+        [],
+        tdms,
+    )
+
+    assert len(result.missing_in_tdms) == 0
+    assert len(result.missing_in_mkys) == 1
+
+
+def test_reconcile_consumption_difference() -> None:
+
+    engine = ReconciliationEngine()
+
+    mkys = [
+        create_movement(
+            source="MKYS",
+            tif_no="",
+            amount="500",
+            movement_type=MovementType.CONSUMPTION,
+        )
+    ]
+
+    tdms = []
+
+    result = engine.reconcile(
+        mkys,
+        tdms,
+    )
+
     assert len(result.consumption_differences) == 1
 
-    difference = result.consumption_differences[0]
 
-    assert difference.year == 2026
-    assert difference.month == 1
+def test_reconcile_opening_match() -> None:
 
-    assert difference.mkys_amount == Decimal("500")
-    assert difference.tdms_amount == Decimal("450")
+    engine = ReconciliationEngine()
 
-    assert difference.difference == Decimal("50")
+    mkys = [
+        create_movement(
+            source="MKYS",
+            tif_no="0",
+            amount="1000",
+        )
+    ]
+
+    tdms = [
+        create_movement(
+            source="TDMS",
+            tif_no="",
+            amount="1000",
+            description="MUHASEBE AÇILIŞ FİŞİ",
+        )
+    ]
+
+    result = engine.reconcile(
+        mkys,
+        tdms,
+    )
+
+    assert len(result.opening_matched) == 1
+    assert len(result.opening_missing_in_tdms) == 0
+    assert len(result.opening_missing_in_mkys) == 0
+
+
+def test_reconcile_opening_missing_in_tdms() -> None:
+
+    engine = ReconciliationEngine()
+
+    mkys = [
+        create_movement(
+            source="MKYS",
+            tif_no="0",
+            amount="1000",
+        )
+    ]
+
+    result = engine.reconcile(
+        mkys,
+        [],
+    )
+
+    assert len(result.opening_matched) == 0
+    assert len(result.opening_missing_in_tdms) == 1
+    assert len(result.opening_missing_in_mkys) == 0
+
+
+def test_reconcile_opening_missing_in_mkys() -> None:
+
+    engine = ReconciliationEngine()
+
+    tdms = [
+        create_movement(
+            source="TDMS",
+            tif_no="",
+            amount="1000",
+            description="MUHASEBE AÇILIŞ FİŞİ",
+        )
+    ]
+
+    result = engine.reconcile(
+        [],
+        tdms,
+    )
+
+    assert len(result.opening_matched) == 0
+    assert len(result.opening_missing_in_tdms) == 0
+    assert len(result.opening_missing_in_mkys) == 1

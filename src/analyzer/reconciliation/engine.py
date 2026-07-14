@@ -4,6 +4,7 @@ from analyzer.models.movement import Movement
 
 from .consumption_matcher import ConsumptionMatcher
 from .matchers import EntryMatcher
+from .opening_matcher import OpeningMatcher
 from .result import ReconciliationResult
 
 
@@ -18,6 +19,10 @@ class ReconciliationEngine:
 
         self._consumption_matcher = (
             ConsumptionMatcher()
+        )
+
+        self._opening_matcher = (
+            OpeningMatcher()
         )
 
     def reconcile(
@@ -43,6 +48,15 @@ class ReconciliationEngine:
             )
         )
 
+        (
+            opening_matched,
+            opening_missing_tdms,
+            opening_missing_mkys,
+        ) = self._opening_matcher.match(
+            mkys,
+            tdms,
+        )
+
         return ReconciliationResult(
             matched=matched,
             missing_in_tdms=missing_tdms,
@@ -50,5 +64,14 @@ class ReconciliationEngine:
             amount_differences=amount_differences,
             consumption_differences=(
                 consumption_differences
+            ),
+            opening_matched=(
+                opening_matched
+            ),
+            opening_missing_in_tdms=(
+                opening_missing_tdms
+            ),
+            opening_missing_in_mkys=(
+                opening_missing_mkys
             ),
         )
