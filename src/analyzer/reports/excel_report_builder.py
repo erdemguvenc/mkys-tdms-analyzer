@@ -7,6 +7,7 @@ from openpyxl import Workbook
 from analyzer.reconciliation.result import ReconciliationResult
 
 from .report_builder import ReportBuilder
+from .worksheet_writer import WorksheetWriter
 
 
 class ExcelReportBuilder(ReportBuilder):
@@ -14,45 +15,66 @@ class ExcelReportBuilder(ReportBuilder):
     Uzlaştırma sonucunu Excel dosyası olarak oluşturur.
     """
 
+    def __init__(self) -> None:
+        self._writer = WorksheetWriter()
+
     def build(
         self,
         result: ReconciliationResult,
         output_file: Path,
     ) -> None:
-        """
-        Excel raporunu oluşturur.
-        """
 
         workbook = Workbook()
 
-        worksheet = workbook.active
-        worksheet.title = "Özet"
+        #
+        # 1_Özet
+        #
+        summary = workbook.active
+        summary.title = "1_Özet"
 
-        worksheet["A1"] = "MKYS - TDMS Uzlaştırma Raporu"
+        self._writer.write_summary(
+            summary,
+            result,
+        )
 
-        worksheet["A3"] = "Eşleşen Giriş Hareketleri"
-        worksheet["B3"] = len(result.matched)
+        #
+        # 2_Giriş_Eşleşen
+        #
+        sheet = workbook.create_sheet(
+            "2_Giriş_Eşleşen"
+        )
 
-        worksheet["A4"] = "TDMS'de Eksik"
-        worksheet["B4"] = len(result.missing_in_tdms)
+        self._writer.write_movements(
+            sheet,
+            "Giriş Eşleşen",
+            result.matched,
+        )
 
-        worksheet["A5"] = "MKYS'de Eksik"
-        worksheet["B5"] = len(result.missing_in_mkys)
+        #
+        # 3_MKYS_Eksik
+        #
+        sheet = workbook.create_sheet(
+            "3_MKYS_Eksik"
+        )
 
-        worksheet["A6"] = "Tutar Farkları"
-        worksheet["B6"] = len(result.amount_differences)
+        self._writer.write_movements(
+            sheet,
+            "MKYS'de Bulunup TDMS'de Bulunmayan Girişler",
+            result.missing_in_tdms,
+        )
 
-        worksheet["A7"] = "Tüketim Farkları"
-        worksheet["B7"] = len(result.consumption_differences)
+        #
+        # 4_TDMS_Eksik
+        #
+        sheet = workbook.create_sheet(
+            "4_TDMS_Eksik"
+        )
 
-        worksheet["A8"] = "Açılış Eşleşmeleri"
-        worksheet["B8"] = len(result.opening_matched)
-
-        worksheet["A9"] = "TDMS'de Eksik Açılış"
-        worksheet["B9"] = len(result.opening_missing_in_tdms)
-
-        worksheet["A10"] = "MKYS'de Eksik Açılış"
-        worksheet["B10"] = len(result.opening_missing_in_mkys)
+        self._writer.write_movements(
+            sheet,
+            "TDMS'de Bulunup MKYS'de Bulunmayan Girişler",
+            result.missing_in_mkys,
+        )
 
         output_file.parent.mkdir(
             parents=True,
