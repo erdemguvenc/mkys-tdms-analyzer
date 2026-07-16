@@ -32,4 +32,7 @@ class ConsumptionDifference:
 
     @property
     def difference(self) -> Decimal:
-        return self.mkys_amount - self.tdms_amount
+        return (
+            self.mkys.amount
+            - self.tdms.amount
+        )

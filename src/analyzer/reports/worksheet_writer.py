@@ -3,10 +3,24 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from openpyxl.styles import Font
+from openpyxl.cell import Cell
 from openpyxl.worksheet.worksheet import Worksheet
 
+from analyzer.reconciliation.difference import (
+    AmountDifference,
+    ConsumptionDifference,
+)
 from analyzer.models.movement import Movement
+from analyzer.reports.styles import (
+    apply_currency,
+    apply_date,
+    apply_decimal,
+    apply_header,
+    apply_integer,
+    apply_text,
+    apply_title,
+    format_worksheet,
+)
 
 
 class WorksheetWriter:
@@ -14,16 +28,11 @@ class WorksheetWriter:
     Excel çalışma sayfalarını doldurur.
     """
 
-    def __init__(self) -> None:
-
-        self._title_font = Font(
-            bold=True,
-            size=16,
-        )
-
-        self._header_font = Font(
-            bold=True,
-        )
+    #
+    # ------------------------------------------------------------------
+    # Yardımcı metodlar
+    # ------------------------------------------------------------------
+    #
 
     def _write_title(
         self,
@@ -31,13 +40,14 @@ class WorksheetWriter:
         title: str,
     ) -> None:
         """
-        Sayfanın başlığını yazar.
+        Sayfa başlığını yazar.
         """
 
         cell = worksheet["A1"]
 
         cell.value = title
-        cell.font = self._title_font
+
+        apply_title(cell)
 
     def _write_headers(
         self,
@@ -46,20 +56,22 @@ class WorksheetWriter:
         row: int = 3,
     ) -> None:
         """
-        Sütun başlıklarını yazar.
+        Tablo başlıklarını yazar.
         """
 
         for column, header in enumerate(
             headers,
             start=1,
         ):
+
             cell = worksheet.cell(
                 row=row,
                 column=column,
             )
 
             cell.value = header
-            cell.font = self._header_font
+
+            apply_header(cell)
 
     def _movement_row(
         self,
@@ -81,59 +93,106 @@ class WorksheetWriter:
             movement.amount,
         ]
 
-    def _auto_fit_columns(
+    def _write_cell(
         self,
-        worksheet: Worksheet,
+        cell: Cell,
+        value: object,
     ) -> None:
         """
-        Sütun genişliklerini otomatik ayarlar.
+        Hücreyi veri tipine göre yazar ve biçimlendirir.
         """
 
-        for column_cells in worksheet.columns:
-
-            values = [
-                str(cell.value)
-                for cell in column_cells
-                if cell.value is not None
-            ]
-
-            if not values:
-                continue
-
-            length = max(
-                len(value)
-                for value in values
-            )
-
-            worksheet.column_dimensions[
-                column_cells[0].column_letter
-            ].width = min(
-                length + 2,
-                50,
-            )
-
-    def _format_date(
-        self,
-        value: date | None,
-    ) -> str:
+        cell.value = value
 
         if value is None:
-            return ""
 
-        return value.strftime(
-            "%d.%m.%Y"
+            apply_text(cell)
+
+            return
+
+        if isinstance(
+            value,
+            date,
+        ):
+
+            apply_date(cell)
+
+            return
+
+        if isinstance(
+            value,
+            Decimal,
+        ):
+
+            apply_decimal(cell)
+
+            return
+
+        if isinstance(
+            value,
+            int,
+        ):
+
+            apply_integer(cell)
+
+            return
+
+        if isinstance(
+            value,
+            float,
+        ):
+
+            apply_currency(cell)
+
+            return
+
+        apply_text(cell)
+
+    def _write_table(
+        self,
+        worksheet: Worksheet,
+        headers: list[str],
+        rows: list[list[object]],
+    ) -> None:
+        """
+        Ortak tablo yazıcısı.
+        """
+
+        self._write_headers(
+            worksheet,
+            headers,
         )
 
-    def _format_decimal(
-        self,
-        value: Decimal | None,
-    ) -> str:
+        current_row = 4
 
-        if value is None:
-            return ""
+        for row in rows:
 
-        return f"{value:.2f}"
-    
+            for column, value in enumerate(
+                row,
+                start=1,
+            ):
+
+                cell = worksheet.cell(
+                    row=current_row,
+                    column=column,
+                )
+
+                self._write_cell(
+                    cell,
+                    value,
+                )
+
+            current_row += 1
+
+        format_worksheet(
+            worksheet,
+        )
+
+            #
+    # ------------------------------------------------------------------
+    # Public metodlar
+    # ------------------------------------------------------------------
+    #
 
     def write_summary(
         self,
@@ -141,12 +200,12 @@ class WorksheetWriter:
         result,
     ) -> None:
         """
-        Özet sayfasını oluşturur.
+        Uzlaştırma özet sayfasını oluşturur.
         """
 
         self._write_title(
             worksheet,
-            "MKYS - TDMS Uzlaştırma Raporu",
+            "MKYS - TDMS Uzlaştırma Özeti",
         )
 
         headers = [
@@ -154,64 +213,45 @@ class WorksheetWriter:
             "Adet",
         ]
 
-        self._write_headers(
-            worksheet,
-            headers,
-        )
-
         rows = [
-            (
+            [
                 "Eşleşen Giriş Hareketleri",
                 len(result.matched),
-            ),
-            (
-                "TDMS'de Eksik",
+            ],
+            [
+                "TDMS'de Bulunmayan Girişler",
                 len(result.missing_in_tdms),
-            ),
-            (
-                "MKYS'de Eksik",
+            ],
+            [
+                "MKYS'de Bulunmayan Girişler",
                 len(result.missing_in_mkys),
-            ),
-            (
+            ],
+            [
                 "Tutar Farkları",
                 len(result.amount_differences),
-            ),
-            (
+            ],
+            [
                 "Tüketim Farkları",
                 len(result.consumption_differences),
-            ),
-            (
+            ],
+            [
                 "Açılış Eşleşmeleri",
                 len(result.opening_matched),
-            ),
-            (
-                "TDMS'de Eksik Açılış",
+            ],
+            [
+                "TDMS'de Bulunmayan Açılışlar",
                 len(result.opening_missing_in_tdms),
-            ),
-            (
-                "MKYS'de Eksik Açılış",
+            ],
+            [
+                "MKYS'de Bulunmayan Açılışlar",
                 len(result.opening_missing_in_mkys),
-            ),
+            ],
         ]
 
-        row_number = 4
-
-        for title, value in rows:
-
-            worksheet.cell(
-                row=row_number,
-                column=1,
-            ).value = title
-
-            worksheet.cell(
-                row=row_number,
-                column=2,
-            ).value = value
-
-            row_number += 1
-
-        self._auto_fit_columns(
+        self._write_table(
             worksheet,
+            headers,
+            rows,
         )
 
     def write_movements(
@@ -221,7 +261,7 @@ class WorksheetWriter:
         movements: list[Movement],
     ) -> None:
         """
-        Hareket listesini çalışma sayfasına yazar.
+        Movement listesini çalışma sayfasına yazar.
         """
 
         self._write_title(
@@ -241,48 +281,101 @@ class WorksheetWriter:
             "Tutar",
         ]
 
-        self._write_headers(
-            worksheet,
-            headers,
-        )
-
-        row_number = 4
+        rows: list[list[object]] = []
 
         for movement in movements:
 
-            values = self._movement_row(
-                movement,
+            rows.append(
+                self._movement_row(
+                    movement,
+                )
             )
 
-            for column, value in enumerate(
-                values,
-                start=1,
-            ):
-
-                cell = worksheet.cell(
-                    row=row_number,
-                    column=column,
-                )
-
-                if isinstance(
-                    value,
-                    date,
-                ):
-                    cell.value = self._format_date(
-                        value,
-                    )
-
-                elif isinstance(
-                    value,
-                    Decimal,
-                ):
-                    cell.value = float(value)
-
-                else:
-                    cell.value = value
-
-            row_number += 1
-
-        self._auto_fit_columns(
+        self._write_table(
             worksheet,
+            headers,
+            rows,
+        )
+
+
+    def write_amount_differences(
+        self,
+        worksheet: Worksheet,
+        differences: list[AmountDifference],
+    ) -> None:
+        """
+        Tutar farklılıklarını yazar.
+        """
+
+        self._write_title(
+            worksheet,
+            "Tutar Farkları",
+        )
+
+        headers = [
+            "TİF No",
+            "MKYS Tutarı",
+            "TDMS Tutarı",
+            "Fark",
+        ]
+
+        rows: list[list[object]] = []
+
+        for difference in differences:
+
+            rows.append(
+                [
+                    difference.mkys.tif_no,
+                    difference.mkys.amount,
+                    difference.tdms.amount,
+                    difference.difference
+                ]
+            )
+
+        self._write_table(
+            worksheet,
+            headers,
+            rows,
+        )
+
+    def write_consumption_differences(
+        self,
+        worksheet: Worksheet,
+        differences: list[ConsumptionDifference],
+    ) -> None:
+        """
+        Aylık tüketim farklarını yazar.
+        """
+
+        self._write_title(
+            worksheet,
+            "Tüketim Farkları",
+        )
+
+        headers = [
+            "Yıl",
+            "Ay",
+            "MKYS",
+            "TDMS",
+            "Fark",
+        ]
+
+        rows: list[list[object]] = []
+
+        for difference in differences:
+
+            rows.append(
+                [
+                    difference.year,
+                    difference.month,
+                    difference.mkys_amount,
+                    difference.tdms_amount,
+                    difference.difference,
+                ]
+            )
+
+        self._write_table(
+            worksheet,
+            headers,
+            rows,
         )
