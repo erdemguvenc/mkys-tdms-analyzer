@@ -21,6 +21,7 @@ from analyzer.reports.styles import (
     apply_title,
     format_worksheet,
 )
+from analyzer.reports.styles import apply_difference_rules
 
 
 class WorksheetWriter:
@@ -338,6 +339,15 @@ class WorksheetWriter:
             rows,
         )
 
+        last_row = len(differences) + 3
+
+        apply_difference_rules(
+            worksheet,
+            first_row=4,
+            last_row=last_row,
+            column=4,
+        )
+
     def write_consumption_differences(
         self,
         worksheet: Worksheet,
@@ -378,4 +388,13 @@ class WorksheetWriter:
             worksheet,
             headers,
             rows,
+        )
+
+        last_row = len(differences) + 3
+
+        apply_difference_rules(
+            worksheet,
+            first_row=4,
+            last_row=last_row,
+            column=5,
         )

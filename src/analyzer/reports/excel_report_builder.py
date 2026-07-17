@@ -41,7 +41,7 @@ class ExcelReportBuilder(ReportBuilder):
         # 2_Giriş_Eşleşen
         #
         sheet = workbook.create_sheet(
-            "2_Giriş_Eşleşen"
+            "2_Giriş_Eşleşen",
         )
 
         self._writer.write_movements(
@@ -54,7 +54,7 @@ class ExcelReportBuilder(ReportBuilder):
         # 3_MKYS_Eksik
         #
         sheet = workbook.create_sheet(
-            "3_MKYS_Eksik"
+            "3_MKYS_Eksik",
         )
 
         self._writer.write_movements(
@@ -67,13 +67,37 @@ class ExcelReportBuilder(ReportBuilder):
         # 4_TDMS_Eksik
         #
         sheet = workbook.create_sheet(
-            "4_TDMS_Eksik"
+            "4_TDMS_Eksik",
         )
 
         self._writer.write_movements(
             sheet,
             "TDMS'de Bulunup MKYS'de Bulunmayan Girişler",
             result.missing_in_mkys,
+        )
+
+        #
+        # 5_Tutar_Farkları
+        #
+        sheet = workbook.create_sheet(
+            "5_Tutar_Farkları",
+        )
+
+        self._writer.write_amount_differences(
+            sheet,
+            result.amount_differences,
+        )
+
+        #
+        # 6_Tüketim_Farkları
+        #
+        sheet = workbook.create_sheet(
+            "6_Tüketim_Farkları",
+        )
+
+        self._writer.write_consumption_differences(
+            sheet,
+            result.consumption_differences,
         )
 
         output_file.parent.mkdir(

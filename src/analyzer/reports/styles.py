@@ -9,6 +9,8 @@ from openpyxl.styles import (
     Side,
 )
 from openpyxl.worksheet.worksheet import Worksheet
+from openpyxl.formatting.rule import CellIsRule
+from openpyxl.styles import PatternFill
 
 #
 # Fonts
@@ -81,6 +83,25 @@ DATE_FORMAT = "DD.MM.YYYY"
 DECIMAL_FORMAT = "#,##0.00"
 
 INTEGER_FORMAT = "#,##0"
+
+#
+# Difference fills
+#
+
+GREEN_FILL = PatternFill(
+    fill_type="solid",
+    fgColor="C6EFCE",
+)
+
+YELLOW_FILL = PatternFill(
+    fill_type="solid",
+    fgColor="FFEB9C",
+)
+
+RED_FILL = PatternFill(
+    fill_type="solid",
+    fgColor="FFC7CE",
+)
 
 
 def apply_title(
@@ -204,3 +225,57 @@ def format_worksheet(
             max(length + 2, 12),
             50,
         )
+
+
+def apply_difference_rules(
+    worksheet,
+    first_row: int,
+    last_row: int,
+    column: int,
+) -> None:
+    """
+    Difference sütununa koşullu biçimlendirme uygular.
+
+    0      -> Yeşil
+    >0     -> Sarı
+    <0     -> Kırmızı
+    """
+
+    if last_row < first_row:
+        return
+
+    from openpyxl.utils import get_column_letter
+
+    column_letter = get_column_letter(column)
+
+    cell_range = (
+        f"{column_letter}{first_row}:"
+        f"{column_letter}{last_row}"
+    )
+
+    worksheet.conditional_formatting.add(
+        cell_range,
+        CellIsRule(
+            operator="equal",
+            formula=["0"],
+            fill=GREEN_FILL,
+        ),
+    )
+
+    worksheet.conditional_formatting.add(
+        cell_range,
+        CellIsRule(
+            operator="greaterThan",
+            formula=["0"],
+            fill=YELLOW_FILL,
+        ),
+    )
+
+    worksheet.conditional_formatting.add(
+        cell_range,
+        CellIsRule(
+            operator="lessThan",
+            formula=["0"],
+            fill=RED_FILL,
+        ),
+    )
