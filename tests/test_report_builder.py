@@ -107,3 +107,51 @@ def test_consumption_difference_sheet_has_conditional_formatting(
     sheet = workbook["6_Tüketim_Farkları"]
 
     assert len(sheet.conditional_formatting) > 0
+
+
+def test_worksheet_page_setup(
+    tmp_path: Path,
+) -> None:
+
+    output = tmp_path / "report.xlsx"
+
+    builder = ExcelReportBuilder()
+
+    builder.build(
+        ReconciliationResult(
+            matched=[movement()],
+        ),
+        output,
+    )
+
+    workbook = load_workbook(output)
+
+    sheet = workbook["2_Giriş_Eşleşen"]
+
+    #
+    # Freeze Panes
+    #
+    assert sheet.freeze_panes == "A4"
+
+    #
+    # AutoFilter
+    #
+    assert sheet.auto_filter.ref is not None
+
+    #
+    # Landscape
+    #
+    assert (
+        sheet.page_setup.orientation
+        == sheet.ORIENTATION_LANDSCAPE
+    )
+
+    #
+    # A4
+    #
+    assert int(sheet.page_setup.paperSize) == 9
+
+    #
+    # Print titles
+    #
+    assert sheet.print_title_rows.replace("$", "") == "1:3"

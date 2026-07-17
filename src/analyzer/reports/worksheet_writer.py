@@ -22,6 +22,7 @@ from analyzer.reports.styles import (
     format_worksheet,
 )
 from analyzer.reports.styles import apply_difference_rules
+from .page_setup import prepare_worksheet
 
 
 class WorksheetWriter:
@@ -254,6 +255,7 @@ class WorksheetWriter:
             headers,
             rows,
         )
+        prepare_worksheet(worksheet)
 
     def write_movements(
         self,
@@ -297,6 +299,8 @@ class WorksheetWriter:
             headers,
             rows,
         )
+
+        prepare_worksheet(worksheet)
 
 
     def write_amount_differences(
@@ -348,6 +352,8 @@ class WorksheetWriter:
             column=4,
         )
 
+        prepare_worksheet(worksheet)
+
     def write_consumption_differences(
         self,
         worksheet: Worksheet,
@@ -398,3 +404,5 @@ class WorksheetWriter:
             last_row=last_row,
             column=5,
         )
+
+        prepare_worksheet(worksheet)
