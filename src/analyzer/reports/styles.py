@@ -10,7 +10,7 @@ from openpyxl.styles import (
 )
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.formatting.rule import CellIsRule
-from openpyxl.styles import PatternFill
+from decimal import Decimal
 
 #
 # Fonts
@@ -78,11 +78,11 @@ RIGHT_ALIGNMENT = Alignment(
 # Number formats
 #
 
-DATE_FORMAT = "DD.MM.YYYY"
+AMOUNT_FORMAT = '#,##0.00'
 
-DECIMAL_FORMAT = "#,##0.00"
+INTEGER_FORMAT = '#,##0'
 
-INTEGER_FORMAT = "#,##0"
+DATE_FORMAT = 'DD.MM.YYYY'
 
 #
 # Difference fills
@@ -101,6 +101,22 @@ YELLOW_FILL = PatternFill(
 RED_FILL = PatternFill(
     fill_type="solid",
     fgColor="FFC7CE",
+)
+
+# Zebra satırlar
+ZEBRA_FILL = PatternFill(
+    fill_type="solid",
+    fgColor="F8F9FA",
+)
+
+# Negatif değerler
+NEGATIVE_FONT = Font(
+    color="C00000",
+)
+
+# Pozitif değerler
+POSITIVE_FONT = Font(
+    color="006100",
 )
 
 
@@ -163,7 +179,7 @@ def apply_decimal(
     cell.font = NORMAL_FONT
     cell.border = THIN_BORDER
     cell.alignment = RIGHT_ALIGNMENT
-    cell.number_format = DECIMAL_FORMAT
+    cell.number_format = AMOUNT_FORMAT
 
 
 def apply_integer(
@@ -189,7 +205,7 @@ def apply_currency(
     cell.font = NORMAL_FONT
     cell.border = THIN_BORDER
     cell.alignment = RIGHT_ALIGNMENT
-    cell.number_format = '#,##0.00'
+    cell.number_format = AMOUNT_FORMAT
 
 
 def format_worksheet(
@@ -279,3 +295,54 @@ def apply_difference_rules(
             fill=RED_FILL,
         ),
     )
+
+
+def apply_zebra_rows(
+    worksheet: Worksheet,
+    first_row: int,
+    last_row: int,
+) -> None:
+    """
+    Alternatif satır renklendirmesi uygular.
+    """
+    for row in range(first_row, last_row + 1):
+
+        if row % 2 == 0:
+
+            for cell in worksheet[row]:
+                cell.fill = ZEBRA_FILL
+
+
+def apply_number_format(
+    worksheet: Worksheet,
+    first_row: int,
+    last_row: int,
+    columns: list[int],
+) -> None:
+    for row in range(first_row, last_row + 1):
+
+        for column in columns:
+
+            cell = worksheet.cell(
+                row=row,
+                column=column,
+            )
+
+            cell.number_format = AMOUNT_FORMAT
+
+
+def apply_negative_font(
+    worksheet: Worksheet,
+    first_row: int,
+    last_row: int,
+    column: int,
+) -> None:
+    for row in range(first_row, last_row + 1):
+
+        cell = worksheet.cell(
+            row=row,
+            column=column,
+        )
+
+        if isinstance(cell.value, (int, float, Decimal)) and cell.value < 0:
+            cell.font = NEGATIVE_FONT
