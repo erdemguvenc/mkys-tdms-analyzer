@@ -5,6 +5,9 @@ from pathlib import Path
 from openpyxl import Workbook
 
 from analyzer.reconciliation.result import ReconciliationResult
+from analyzer.reports.dashboard_summary import DashboardSummary
+
+from .dashboard_writer import DashboardWriter
 
 from .report_builder import ReportBuilder
 from .worksheet_writer import WorksheetWriter
@@ -16,7 +19,10 @@ class ExcelReportBuilder(ReportBuilder):
     """
 
     def __init__(self) -> None:
+
         self._writer = WorksheetWriter()
+
+        self._dashboard_writer = DashboardWriter()
 
     def build(
         self,
@@ -27,13 +33,30 @@ class ExcelReportBuilder(ReportBuilder):
         workbook = Workbook()
 
         #
+        # 0_Dashboard
+        #
+        dashboard = workbook.active
+
+        dashboard.title = "0_Dashboard"
+
+        summary = DashboardSummary.from_result(
+            result,
+        )
+
+        self._dashboard_writer.write_dashboard(
+            dashboard,
+            summary,
+        )
+
+        #
         # 1_Özet
         #
-        summary = workbook.active
-        summary.title = "1_Özet"
+        summary_sheet = workbook.create_sheet(
+            "1_Özet",
+        )
 
         self._writer.write_summary(
-            summary,
+            summary_sheet,
             result,
         )
 

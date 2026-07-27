@@ -155,3 +155,23 @@ def test_worksheet_page_setup(
     # Print titles
     #
     assert sheet.print_title_rows.replace("$", "") == "1:3"
+
+
+def test_dashboard_sheet_exists(
+    tmp_path: Path,
+) -> None:
+
+    output = tmp_path / "report.xlsx"
+
+    builder = ExcelReportBuilder()
+
+    builder.build(
+        ReconciliationResult(
+            matched=[movement()],
+        ),
+        output,
+    )
+
+    workbook = load_workbook(output)
+
+    assert "0_Dashboard" in workbook.sheetnames

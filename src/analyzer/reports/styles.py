@@ -346,3 +346,79 @@ def apply_negative_font(
 
         if isinstance(cell.value, (int, float, Decimal)) and cell.value < 0:
             cell.font = NEGATIVE_FONT
+
+
+def apply_kpi_title(
+    cell: Cell,
+) -> None:
+    """
+    KPI kartı başlığını biçimlendirir.
+    """
+
+    cell.font = Font(
+        bold=True,
+        size=11,
+        color="666666",
+    )
+
+    cell.alignment = CENTER_ALIGNMENT
+
+    cell.fill = PatternFill(
+        fill_type="solid",
+        fgColor="F2F2F2",
+    )
+
+    cell.border = THIN_BORDER
+
+
+def apply_kpi_value(
+    cell: Cell,
+) -> None:
+    """
+    KPI kartı değerini biçimlendirir.
+    """
+
+    cell.font = Font(
+        bold=True,
+        size=22,
+        color="1F4E78",
+    )
+
+    cell.alignment = CENTER_ALIGNMENT
+
+    cell.border = THIN_BORDER
+
+    cell.number_format = INTEGER_FORMAT
+
+
+def apply_kpi_card(
+    worksheet: Worksheet,
+    first_row: int,
+    last_row: int,
+    first_column: int,
+    last_column: int,
+) -> None:
+    """
+    KPI kartının tamamına ortak görünüm uygular.
+    """
+
+    card_fill = PatternFill(
+        fill_type="solid",
+        fgColor="FFFFFF",
+    )
+
+    for row in range(first_row, last_row + 1):
+
+        for column in range(
+            first_column,
+            last_column + 1,
+        ):
+
+            cell = worksheet.cell(
+                row=row,
+                column=column,
+            )
+
+            cell.fill = card_fill
+            cell.border = THIN_BORDER
+            cell.alignment = CENTER_ALIGNMENT
