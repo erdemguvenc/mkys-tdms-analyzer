@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from openpyxl.formatting.rule import DataBarRule
 from openpyxl.worksheet.worksheet import Worksheet
 
 from analyzer.reports.dashboard_summary import DashboardSummary
@@ -14,6 +15,7 @@ from analyzer.reports.report_status import ReportStatus
 from .dashboard_charts import DashboardCharts
 
 from .page_setup import prepare_worksheet
+from .theme import THEME_CHART_PRIMARY
 from .styles import (
     apply_kpi_card,
     apply_kpi_title,
@@ -120,6 +122,7 @@ class DashboardWriter:
     def _write_kpi_card(
         self,
         worksheet: Worksheet,
+        icon: str,
         title: str,
         value: int,
         row: int,
@@ -156,7 +159,7 @@ class DashboardWriter:
             column=column,
         )   
 
-        title_cell.value = title
+        title_cell.value = f"{icon} {title}"
 
         apply_kpi_title(
             title_cell,
@@ -185,36 +188,42 @@ class DashboardWriter:
 
         cards = [
             (
+                "📊",
                 "Toplam Kayıt",
                 summary.total_records,
                 8,
                 1,
             ),
             (
+                "✔",
                 "Eşleşen Kayıt",
                 summary.matched_records,
                 8,
                 4,
             ),
             (
+                "⚠",
                 "MKYS Eksik",
                 summary.missing_in_mkys,
                 8,
                 7,
             ),
             (
+                "⚠",
                 "TDMS Eksik",
                 summary.missing_in_tdms,
                 8,
                 10,
             ),
             (
+                "💰",
                 "Tutar Farkı",
                 summary.amount_difference_count,
                 12,
                 1,
             ),
             (
+                "📦",
                 "Tüketim Farkı",
                 summary.consumption_difference_count,
                 12,
@@ -222,10 +231,11 @@ class DashboardWriter:
             ),
         ]
 
-        for title, value, row, column in cards:
+        for icon, title, value, row, column in cards:
 
             self._write_kpi_card(
                 worksheet,
+                icon,
                 title,
                 value,
                 row,
@@ -379,7 +389,7 @@ class DashboardWriter:
         summary: DashboardSummary,
     ) -> None:
         """
-        Rapor kalite yüzdesini gösterir.
+        Dashboard kalite yüzdesini yazar ve progress bar uygular.
         """
 
         quality = 0.0
@@ -392,8 +402,20 @@ class DashboardWriter:
                 * 100
             )
 
-        worksheet["J7"] = "Kalite"
+        title = worksheet["J7"]
+        title.value = "Kalite"
 
-        worksheet["K7"] = quality / 100
+        value = worksheet["K7"]
+        value.value = quality / 100
+        value.number_format = "0%"
 
-        worksheet["K7"].number_format = "0%"
+        worksheet.conditional_formatting.add(
+            "K7",
+            DataBarRule(
+                start_type="num",
+                start_value=0,
+                end_type="num",
+                end_value=1,
+                color=THEME_CHART_PRIMARY,
+            ),
+        )

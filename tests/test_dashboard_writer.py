@@ -54,12 +54,12 @@ def test_dashboard_kpi_titles() -> None:
         build_summary(),
     )
 
-    assert worksheet["A8"].value == "Toplam Kayıt"
-    assert worksheet["D8"].value == "Eşleşen Kayıt"
-    assert worksheet["G8"].value == "MKYS Eksik"
-    assert worksheet["J8"].value == "TDMS Eksik"
-    assert worksheet["A12"].value == "Tutar Farkı"
-    assert worksheet["D12"].value == "Tüketim Farkı"
+    assert worksheet["A8"].value == "📊 Toplam Kayıt"
+    assert worksheet["D8"].value == "✔ Eşleşen Kayıt"
+    assert worksheet["G8"].value == "⚠ MKYS Eksik"
+    assert worksheet["J8"].value == "⚠ TDMS Eksik"
+    assert worksheet["A12"].value == "💰 Tutar Farkı"
+    assert worksheet["D12"].value == "📦 Tüketim Farkı" 
 
 
 def test_dashboard_kpi_values() -> None:
@@ -218,3 +218,27 @@ def test_dashboard_executive_summary() -> None:
 
     # İkinci satır eşleşen kayıt bilgisini göstermeli
     assert "kayıt başarıyla eşleşti" in worksheet["A4"].value
+
+
+def test_dashboard_quality_progress() -> None:
+
+    workbook = Workbook()
+
+    worksheet = workbook.active
+
+    writer = DashboardWriter()
+
+    writer.write_dashboard(
+        worksheet,
+        build_summary(),
+    )
+
+    assert worksheet["J7"].value == "Kalite"
+
+    assert worksheet["K7"].value is not None
+
+    assert worksheet["K7"].number_format == "0%"
+
+    assert len(
+        worksheet.conditional_formatting
+    ) == 1

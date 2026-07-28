@@ -14,8 +14,32 @@ from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.formatting.rule import CellIsRule
 from decimal import Decimal
 
+from .theme import (
+    THEME_PRIMARY,
+    THEME_SUCCESS,
+    THEME_WARNING,
+    THEME_CRITICAL,    
+    THEME_CARD,    
+    THEME_SUCCESS,    
+    THEME_BORDER,
+    THEME_WHITE,
+    THEME_TEXT_DARK,
+    THEME_TEXT,
+    THEME_SUMMARY,
+    THEME_NEGATIVE,
+    THEME_TEXT_LIGHT,
+    THEME_BACKGROUND,
+    THEME_HEADER,
+    THEME_POSITIVE,
+    THEME_TITLE,
+    THEME_DIFF_GREEN,
+    THEME_DIFF_YELLOW,
+    THEME_DIFF_RED,
+)
+
 #
 # Fonts
+
 #
 
 TITLE_FONT = Font(
@@ -25,7 +49,7 @@ TITLE_FONT = Font(
 
 HEADER_FONT = Font(
     bold=True,
-    color="FFFFFF",
+    color=THEME_WHITE,
 )
 
 NORMAL_FONT = Font(
@@ -35,12 +59,12 @@ NORMAL_FONT = Font(
 SUMMARY_TITLE_FONT = Font(
     bold=True,
     size=12,
-    color="1F1F1F",
+    color=THEME_TEXT_DARK,
 )
 
 SUMMARY_TEXT_FONT = Font(
     size=10,
-    color="404040",
+    color=THEME_TEXT,
 )
 
 #
@@ -49,27 +73,27 @@ SUMMARY_TEXT_FONT = Font(
 
 HEADER_FILL = PatternFill(
     fill_type="solid",
-    fgColor="4472C4",
+    fgColor=THEME_PRIMARY,
 )
 
 SUMMARY_FILL = PatternFill(
     fill_type="solid",
-    fgColor="F3F6FA",
+    fgColor=THEME_SUMMARY,
 )
 
 GOOD_BADGE_FILL = PatternFill(
     fill_type="solid",
-    fgColor="C6EFCE",
+    fgColor=THEME_SUCCESS,
 )
 
 WARNING_BADGE_FILL = PatternFill(
     fill_type="solid",
-    fgColor="FFF2CC",
+    fgColor=THEME_WARNING,
 )
 
 CRITICAL_BADGE_FILL = PatternFill(
     fill_type="solid",
-    fgColor="F4CCCC",
+    fgColor=THEME_CRITICAL,
 )
 
 #
@@ -78,7 +102,7 @@ CRITICAL_BADGE_FILL = PatternFill(
 
 THIN_SIDE = Side(
     border_style="thin",
-    color="000000",
+    color=THEME_BORDER,
 )
 
 THIN_BORDER = Border(
@@ -130,33 +154,33 @@ DATE_FORMAT = 'DD.MM.YYYY'
 
 GREEN_FILL = PatternFill(
     fill_type="solid",
-    fgColor="C6EFCE",
+    fgColor=THEME_DIFF_GREEN,
 )
 
 YELLOW_FILL = PatternFill(
     fill_type="solid",
-    fgColor="FFEB9C",
+    fgColor=THEME_DIFF_YELLOW,
 )
 
 RED_FILL = PatternFill(
     fill_type="solid",
-    fgColor="FFC7CE",
+    fgColor=THEME_DIFF_RED,
 )
 
 # Zebra satırlar
 ZEBRA_FILL = PatternFill(
     fill_type="solid",
-    fgColor="F8F9FA",
+    fgColor=THEME_CARD,
 )
 
 # Negatif değerler
 NEGATIVE_FONT = Font(
-    color="C00000",
+    color=THEME_NEGATIVE,
 )
 
 # Pozitif değerler
 POSITIVE_FONT = Font(
-    color="006100",
+    color=THEME_POSITIVE,
 )
 
 
@@ -398,14 +422,14 @@ def apply_kpi_title(
     cell.font = Font(
         bold=True,
         size=11,
-        color="666666",
+        color=THEME_TEXT_LIGHT,
     )
 
     cell.alignment = CENTER_ALIGNMENT
 
     cell.fill = PatternFill(
         fill_type="solid",
-        fgColor="F2F2F2",
+        fgColor=THEME_HEADER,
     )
 
     cell.border = THIN_BORDER
@@ -421,7 +445,7 @@ def apply_kpi_value(
     cell.font = Font(
         bold=True,
         size=22,
-        color="1F4E78",
+        color=THEME_TITLE,
     )
 
     cell.alignment = CENTER_ALIGNMENT
@@ -444,7 +468,7 @@ def apply_kpi_card(
 
     card_fill = PatternFill(
         fill_type="solid",
-        fgColor="FFFFFF",
+        fgColor=THEME_BACKGROUND,
     )
 
     for row in range(first_row, last_row + 1):
@@ -527,7 +551,7 @@ def apply_summary_success(
 
     fill = PatternFill(
         fill_type="solid",
-        fgColor="C6EFCE",
+        fgColor=THEME_SUCCESS,
     )
 
     for row in range(first_row, last_row + 1):
@@ -555,7 +579,7 @@ def apply_summary_warning(
 
     fill = PatternFill(
         fill_type="solid",
-        fgColor="FFF2CC",
+        fgColor=THEME_WARNING,
     )
 
     for row in range(first_row, last_row + 1):
@@ -583,7 +607,7 @@ def apply_summary_critical(
 
     fill = PatternFill(
         fill_type="solid",
-        fgColor="F4CCCC",
+        fgColor=THEME_CRITICAL,
     )
 
     for row in range(first_row, last_row + 1):
