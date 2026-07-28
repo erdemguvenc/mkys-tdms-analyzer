@@ -37,6 +37,11 @@ class DashboardWriter:
             summary,
         )
 
+        DashboardCharts.add_consumption_bar_chart(
+            worksheet,
+            summary,
+        )
+
         self._write_match_pie_chart(
             worksheet,
             summary,

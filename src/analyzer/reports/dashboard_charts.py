@@ -6,6 +6,12 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from analyzer.reports.dashboard_summary import DashboardSummary
 
+from openpyxl.chart import (
+    BarChart,
+    PieChart,
+    Reference,
+)
+
 
 class DashboardCharts:
     """
@@ -85,4 +91,58 @@ class DashboardCharts:
         worksheet.add_chart(
             chart,
             "H3",
+        )
+
+
+    @staticmethod
+    def add_consumption_bar_chart(
+        worksheet: Worksheet,
+        summary: DashboardSummary,
+    ) -> None:
+        """
+        Tüketim ve tutar farklarını gösteren sütun grafiği ekler.
+        """
+
+        worksheet["N7"] = "Kategori"
+        worksheet["O7"] = "Adet"
+
+        worksheet["N8"] = "Tutar Farkı"
+        worksheet["O8"] = summary.amount_difference_count
+
+        worksheet["N9"] = "Tüketim Farkı"
+        worksheet["O9"] = summary.consumption_difference_count
+
+        labels = Reference(
+            worksheet,
+            min_col=14,
+            min_row=8,
+            max_row=9,
+        )
+
+        data = Reference(
+            worksheet,
+            min_col=15,
+            min_row=7,
+            max_row=9,
+        )
+
+        chart = BarChart()
+
+        chart.title = "Fark Analizi"
+        chart.y_axis.title = "Kayıt"
+        chart.x_axis.title = "Kategori"
+
+        chart.height = 8
+        chart.width = 10
+
+        chart.add_data(
+            data,
+            titles_from_data=True,
+        )
+
+        chart.set_categories(labels)
+
+        worksheet.add_chart(
+            chart,
+            "H20",
         )

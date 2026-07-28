@@ -6,7 +6,8 @@ from analyzer.reconciliation.result import ReconciliationResult
 from analyzer.reports.dashboard_summary import DashboardSummary
 from analyzer.reports.dashboard_writer import DashboardWriter
 
-from openpyxl.chart import PieChart
+from openpyxl.chart import PieChart ,BarChart
+
 
 
 def build_summary() -> DashboardSummary:
@@ -113,18 +114,20 @@ def test_dashboard_contains_pie_chart() -> None:
         build_summary(),
     )
 
+    # Dashboard'da 2 grafik olmalı
     assert len(worksheet._charts) == 2
 
+    chart = worksheet._charts[0]
+
     assert isinstance(
-        worksheet._charts[0],
+        chart,
         PieChart,
     )
 
+    assert chart.title is not None
 
-def test_dashboard_contains_pie_chart() -> None:
-    """
-    Dashboard sayfasına PieChart eklendiğini doğrular.
-    """
+
+def test_dashboard_contains_bar_chart() -> None:
 
     workbook = Workbook()
 
@@ -137,22 +140,56 @@ def test_dashboard_contains_pie_chart() -> None:
         build_summary(),
     )
 
-    #
-    # Dashboard'da yalnızca bir grafik olmalı
-    #
-    assert len(worksheet._charts) == 1
+    chart = worksheet._charts[1]
 
-    chart = worksheet._charts[0]
-
-    #
-    # Grafik tipi PieChart olmalı
-    #
     assert isinstance(
         chart,
+        BarChart,
+    )
+
+    assert chart.title is not None
+
+
+def test_dashboard_chart_types() -> None:
+
+    workbook = Workbook()
+
+    worksheet = workbook.active
+
+    writer = DashboardWriter()
+
+    writer.write_dashboard(
+        worksheet,
+        build_summary(),
+    )
+
+    assert len(worksheet._charts) == 2
+
+    assert isinstance(
+        worksheet._charts[0],
         PieChart,
     )
 
-    #
-    # Grafik başlığı atanmış olmalı
-    #
-    assert chart.title is not None
+    assert isinstance(
+        worksheet._charts[1],
+        BarChart,
+    )
+
+
+def test_dashboard_chart_titles() -> None:
+
+    workbook = Workbook()
+
+    worksheet = workbook.active
+
+    writer = DashboardWriter()
+
+    writer.write_dashboard(
+        worksheet,
+        build_summary(),
+    )
+
+    assert len(worksheet._charts) == 2
+
+    assert worksheet._charts[0].title is not None
+    assert worksheet._charts[1].title is not None
