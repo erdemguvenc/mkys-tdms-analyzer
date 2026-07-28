@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from analyzer.reports.report_status import ReportStatus
+
 from openpyxl.cell import Cell
 from openpyxl.styles import (
     Alignment,
@@ -53,6 +55,21 @@ HEADER_FILL = PatternFill(
 SUMMARY_FILL = PatternFill(
     fill_type="solid",
     fgColor="F3F6FA",
+)
+
+GOOD_BADGE_FILL = PatternFill(
+    fill_type="solid",
+    fgColor="C6EFCE",
+)
+
+WARNING_BADGE_FILL = PatternFill(
+    fill_type="solid",
+    fgColor="FFF2CC",
+)
+
+CRITICAL_BADGE_FILL = PatternFill(
+    fill_type="solid",
+    fgColor="F4CCCC",
 )
 
 #
@@ -491,3 +508,94 @@ def apply_summary_box(
 
             cell.fill = SUMMARY_FILL
             cell.border = SUMMARY_BORDER
+
+
+def apply_summary_success(
+    worksheet: Worksheet,
+    first_row: int,
+    last_row: int,
+    first_column: int,
+    last_column: int,
+) -> None:
+    apply_summary_box(
+        worksheet,
+        first_row,
+        last_row,
+        first_column,
+        last_column,
+    )
+
+    fill = PatternFill(
+        fill_type="solid",
+        fgColor="C6EFCE",
+    )
+
+    for row in range(first_row, last_row + 1):
+        for column in range(first_column, last_column + 1):
+            worksheet.cell(
+                row=row,
+                column=column,
+            ).fill = fill
+
+
+def apply_summary_warning(
+    worksheet: Worksheet,
+    first_row: int,
+    last_row: int,
+    first_column: int,
+    last_column: int,
+) -> None:
+    apply_summary_box(
+        worksheet,
+        first_row,
+        last_row,
+        first_column,
+        last_column,
+    )
+
+    fill = PatternFill(
+        fill_type="solid",
+        fgColor="FFF2CC",
+    )
+
+    for row in range(first_row, last_row + 1):
+        for column in range(first_column, last_column + 1):
+            worksheet.cell(
+                row=row,
+                column=column,
+            ).fill = fill
+
+
+def apply_summary_critical(
+    worksheet: Worksheet,
+    first_row: int,
+    last_row: int,
+    first_column: int,
+    last_column: int,
+) -> None:
+    apply_summary_box(
+        worksheet,
+        first_row,
+        last_row,
+        first_column,
+        last_column,
+    )
+
+    fill = PatternFill(
+        fill_type="solid",
+        fgColor="F4CCCC",
+    )
+
+    for row in range(first_row, last_row + 1):
+        for column in range(first_column, last_column + 1):
+            worksheet.cell(
+                row=row,
+                column=column,
+            ).fill = fill
+
+
+def apply_status_badge(
+    cell: Cell,
+    status: ReportStatus,
+) -> None:
+    ...

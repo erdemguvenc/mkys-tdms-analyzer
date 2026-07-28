@@ -5,6 +5,11 @@ from openpyxl.worksheet.worksheet import Worksheet
 from analyzer.reports.dashboard_summary import DashboardSummary
 
 from analyzer.reports.executive_summary import ExecutiveSummary
+from analyzer.reports.executive_summary import (
+    ExecutiveSummary,
+    ExecutiveSummaryResult,
+)
+from analyzer.reports.report_status import ReportStatus
 
 from .dashboard_charts import DashboardCharts
 
@@ -16,7 +21,11 @@ from .styles import (
     apply_summary_box,
     apply_summary_text,
     apply_summary_title,
-    apply_title,
+    apply_summary_success,
+    apply_summary_warning,
+    apply_summary_critical,
+    apply_status_badge,
+    apply_title,    
 )
 
 
@@ -34,13 +43,23 @@ class DashboardWriter:
 
         summary_builder = ExecutiveSummary()
 
-        lines = summary_builder.build(
+        result = summary_builder.build(
             summary,
         )
 
         self._write_executive_summary(
             worksheet,
-            lines,
+            result,
+        )
+
+        self._write_status_badge(
+            worksheet,
+            result,
+        )
+
+        self._write_quality_progress(
+            worksheet,
+            summary,
         )
 
         self._write_kpis(
@@ -243,7 +262,7 @@ class DashboardWriter:
     def _write_executive_summary(
         self,
         worksheet: Worksheet,
-        lines: list[str],
+        result: ExecutiveSummaryResult,
     ) -> None:
         """
         Dashboard'a yönetici özetini yazar.
@@ -252,13 +271,35 @@ class DashboardWriter:
         #
         # Summary kutusu
         #
-        apply_summary_box(
+        if result.status is ReportStatus.GOOD:
+
+            apply_summary_success(
             worksheet,
             first_row=2,
             last_row=6,
             first_column=1,
             last_column=12,
         )
+
+        elif result.status is ReportStatus.WARNING:
+
+            apply_summary_warning(
+            worksheet,
+            first_row=2,
+            last_row=6,
+            first_column=1,
+            last_column=12,
+        )
+
+        else:
+
+            apply_summary_critical(
+                worksheet,
+                first_row=2,
+                last_row=6,
+                first_column=1,
+                last_column=12,
+            )
 
         #
         # Başlık
@@ -268,7 +309,19 @@ class DashboardWriter:
             column=1,
         )
 
-        title.value = "Executive Summary"
+        if result.status is ReportStatus.GOOD:
+
+            title_text = "✔ Executive Summary"
+
+        elif result.status is ReportStatus.WARNING:
+
+            title_text = "⚠ Executive Summary"
+
+        else:
+
+            title_text = "✖ Executive Summary"
+
+        title.value = title_text
 
         apply_summary_title(
             title,
@@ -277,7 +330,7 @@ class DashboardWriter:
         #
         # Özet satırları
         #
-        for index, line in enumerate(lines):
+        for index, line in enumerate(result.lines):
 
             cell = worksheet.cell(
                 row=3 + index,
@@ -289,3 +342,58 @@ class DashboardWriter:
             apply_summary_text(
                 cell,
             )
+
+
+    def _write_status_badge(
+        self,
+        worksheet: Worksheet,
+        result: ExecutiveSummaryResult,
+    ) -> None:
+
+        badge = worksheet.cell(
+            row=2,
+            column=12,
+        )
+
+        if result.status is ReportStatus.GOOD:
+
+            badge.value = "GOOD"
+
+        elif result.status is ReportStatus.WARNING:
+
+            badge.value = "WARNING"
+
+        else:
+
+            badge.value = "CRITICAL"
+
+        apply_status_badge(
+            badge,
+            result.status,
+        )
+
+
+    def _write_quality_progress(
+        self,
+        worksheet: Worksheet,
+        summary: DashboardSummary,
+    ) -> None:
+        """
+        Rapor kalite yüzdesini gösterir.
+        """
+
+        quality = 0.0
+
+        if summary.total_records:
+
+            quality = (
+                summary.matched_records
+                / summary.total_records
+                * 100
+            )
+
+        worksheet["J7"] = "Kalite"
+
+        worksheet["K7"] = quality / 100
+
+        worksheet["K7"].number_format = "0%"

@@ -3,7 +3,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from analyzer.reports.dashboard_summary import DashboardSummary
+from analyzer.reports.report_status import ReportStatus
 
+@dataclass(slots=True)
+class ExecutiveSummaryResult:
+    """
+    Dashboard'da gösterilecek yönetici özeti.
+    """
+
+    status: ReportStatus
+    lines: list[str]
 
 @dataclass(slots=True)
 class ExecutiveSummary:
@@ -14,7 +23,7 @@ class ExecutiveSummary:
     def build(
         self,
         summary: DashboardSummary,
-    ) -> list[str]:
+    ) -> ExecutiveSummaryResult:
 
         lines: list[str] = []
 
@@ -22,11 +31,12 @@ class ExecutiveSummary:
 
         if total == 0:
 
-            lines.append(
-                "İşlenecek kayıt bulunamadı."
+            return ExecutiveSummaryResult(
+                status=ReportStatus.WARNING,
+                lines=[
+                    "İşlenecek kayıt bulunamadı.",
+                ],
             )
-
-            return lines
 
         match_rate = (
             summary.matched_records
@@ -54,13 +64,40 @@ class ExecutiveSummary:
                 f"{summary.consumption_difference_count} tüketim farkı tespit edildi."
             )
 
+        #
+        # Durum belirleme
+        #
         if (
             summary.amount_difference_count == 0
             and summary.consumption_difference_count == 0
         ):
 
+            status = ReportStatus.GOOD
+
             lines.append(
-                "Herhangi bir fark bulunmadı."
+                "✔ Uzlaştırma başarıyla tamamlandı."
             )
 
-        return lines
+        elif (
+            summary.amount_difference_count <= 5
+            and summary.consumption_difference_count <= 2
+        ):
+
+            status = ReportStatus.WARNING
+
+            lines.append(
+                "⚠ Birkaç kayıt manuel kontrol gerektiriyor."
+            )
+
+        else:
+
+            status = ReportStatus.CRITICAL
+
+            lines.append(
+                "✖ Çok sayıda farklılık tespit edildi."
+            )
+
+        return ExecutiveSummaryResult(
+            status=status,
+            lines=lines,
+        )        

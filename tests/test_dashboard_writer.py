@@ -210,5 +210,11 @@ def test_dashboard_executive_summary() -> None:
         build_summary(),
     )
 
-    assert worksheet["A2"].value == "Executive Summary"
+    # Başlıkta durum ikonu olmalı
+    assert worksheet["A2"].value.endswith("Executive Summary")
+
+    # İlk satır uzlaştırma oranını göstermeli
     assert worksheet["A3"].value.startswith("Uzlaştırma Oranı")
+
+    # İkinci satır eşleşen kayıt bilgisini göstermeli
+    assert "kayıt başarıyla eşleşti" in worksheet["A4"].value
