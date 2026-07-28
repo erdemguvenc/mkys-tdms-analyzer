@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from openpyxl.chart import PieChart, Reference
+from openpyxl.chart.label import DataLabelList
 from openpyxl.chart.series import DataPoint
+from openpyxl.chart.shapes import GraphicalProperties
 from openpyxl.worksheet.worksheet import Worksheet
 
 from analyzer.reports.dashboard_summary import DashboardSummary
@@ -128,7 +130,10 @@ class DashboardCharts:
 
         chart = BarChart()
 
-        chart.title = "Fark Analizi"
+        chart.type = "col"
+        chart.style = 10
+
+        chart.title = "MKYS - TDMS Fark Analizi"
         chart.y_axis.title = "Kayıt"
         chart.x_axis.title = "Kategori"
 
@@ -140,7 +145,21 @@ class DashboardCharts:
             titles_from_data=True,
         )
 
-        chart.set_categories(labels)
+        chart.set_categories(
+            labels,
+        )
+
+        # Kurumsal mavi renk
+        chart.series[0].graphicalProperties = GraphicalProperties(
+            solidFill="4472C4",
+        )
+
+        # Veri etiketleri
+        chart.dataLabels = DataLabelList()
+        chart.dataLabels.showVal = True
+
+        # Grid çizgilerini kaldır
+        chart.y_axis.majorGridlines = None
 
         worksheet.add_chart(
             chart,
