@@ -4,6 +4,8 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 from analyzer.reports.dashboard_summary import DashboardSummary
 
+from analyzer.reports.executive_summary import ExecutiveSummary
+
 from .dashboard_charts import DashboardCharts
 
 from .page_setup import prepare_worksheet
@@ -11,6 +13,9 @@ from .styles import (
     apply_kpi_card,
     apply_kpi_title,
     apply_kpi_value,
+    apply_summary_box,
+    apply_summary_text,
+    apply_summary_title,
     apply_title,
 )
 
@@ -25,6 +30,17 @@ class DashboardWriter:
 
         self._write_dashboard_title(
             worksheet,
+        )
+
+        summary_builder = ExecutiveSummary()
+
+        lines = summary_builder.build(
+            summary,
+        )
+
+        self._write_executive_summary(
+            worksheet,
+            lines,
         )
 
         self._write_kpis(
@@ -70,17 +86,15 @@ class DashboardWriter:
             column=1,
         )
 
-        title.value = (
-            "MKYS - TDMS Uzlaştırma Dashboard"
-        )
+        title.value = "MKYS - TDMS Uzlaştırma Dashboard"
 
         apply_title(title)
 
         worksheet.merge_cells(
-        start_row=1,
-        start_column=1,
-        end_row=1,
-        end_column=12,
+            start_row=1,
+            start_column=1,
+            end_row=1,
+            end_column=12,
         )
 
 
@@ -154,37 +168,37 @@ class DashboardWriter:
             (
                 "Toplam Kayıt",
                 summary.total_records,
-                3,
+                8,
                 1,
             ),
             (
                 "Eşleşen Kayıt",
                 summary.matched_records,
-                3,
+                8,
                 4,
             ),
             (
                 "MKYS Eksik",
                 summary.missing_in_mkys,
-                3,
+                8,
                 7,
             ),
             (
                 "TDMS Eksik",
                 summary.missing_in_tdms,
-                3,
+                8,
                 10,
             ),
             (
                 "Tutar Farkı",
                 summary.amount_difference_count,
-                7,
+                12,
                 1,
             ),
             (
                 "Tüketim Farkı",
                 summary.consumption_difference_count,
-                7,
+                12,
                 4,
             ),
         ]
@@ -226,4 +240,52 @@ class DashboardWriter:
         pass
 
 
-    
+    def _write_executive_summary(
+        self,
+        worksheet: Worksheet,
+        lines: list[str],
+    ) -> None:
+        """
+        Dashboard'a yönetici özetini yazar.
+        """
+
+        #
+        # Summary kutusu
+        #
+        apply_summary_box(
+            worksheet,
+            first_row=2,
+            last_row=6,
+            first_column=1,
+            last_column=12,
+        )
+
+        #
+        # Başlık
+        #
+        title = worksheet.cell(
+            row=2,
+            column=1,
+        )
+
+        title.value = "Executive Summary"
+
+        apply_summary_title(
+            title,
+        )
+
+        #
+        # Özet satırları
+        #
+        for index, line in enumerate(lines):
+
+            cell = worksheet.cell(
+                row=3 + index,
+                column=1,
+            )
+
+            cell.value = line
+
+            apply_summary_text(
+                cell,
+            )

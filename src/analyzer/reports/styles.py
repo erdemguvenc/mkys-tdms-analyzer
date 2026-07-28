@@ -30,6 +30,17 @@ NORMAL_FONT = Font(
     bold=False,
 )
 
+SUMMARY_TITLE_FONT = Font(
+    bold=True,
+    size=12,
+    color="1F1F1F",
+)
+
+SUMMARY_TEXT_FONT = Font(
+    size=10,
+    color="404040",
+)
+
 #
 # Fill
 #
@@ -37,6 +48,11 @@ NORMAL_FONT = Font(
 HEADER_FILL = PatternFill(
     fill_type="solid",
     fgColor="4472C4",
+)
+
+SUMMARY_FILL = PatternFill(
+    fill_type="solid",
+    fgColor="F3F6FA",
 )
 
 #
@@ -49,6 +65,13 @@ THIN_SIDE = Side(
 )
 
 THIN_BORDER = Border(
+    left=THIN_SIDE,
+    right=THIN_SIDE,
+    top=THIN_SIDE,
+    bottom=THIN_SIDE,
+)
+
+SUMMARY_BORDER = Border(
     left=THIN_SIDE,
     right=THIN_SIDE,
     top=THIN_SIDE,
@@ -422,3 +445,49 @@ def apply_kpi_card(
             cell.fill = card_fill
             cell.border = THIN_BORDER
             cell.alignment = CENTER_ALIGNMENT
+
+
+def apply_summary_title(
+    cell: Cell,
+) -> None:
+    """
+    Executive Summary başlığını biçimlendirir.
+    """
+
+    cell.font = SUMMARY_TITLE_FONT
+    cell.alignment = LEFT_ALIGNMENT
+
+
+def apply_summary_text(
+    cell: Cell,
+) -> None:
+    """
+    Executive Summary metnini biçimlendirir.
+    """
+
+    cell.font = SUMMARY_TEXT_FONT
+    cell.alignment = LEFT_ALIGNMENT
+
+
+def apply_summary_box(
+    worksheet: Worksheet,
+    first_row: int,
+    last_row: int,
+    first_column: int,
+    last_column: int,
+) -> None:
+    """
+    Executive Summary kutusunu biçimlendirir.
+    """
+
+    for row in range(first_row, last_row + 1):
+
+        for column in range(first_column, last_column + 1):
+
+            cell = worksheet.cell(
+                row=row,
+                column=column,
+            )
+
+            cell.fill = SUMMARY_FILL
+            cell.border = SUMMARY_BORDER

@@ -54,12 +54,12 @@ def test_dashboard_kpi_titles() -> None:
         build_summary(),
     )
 
-    assert worksheet["A3"].value == "Toplam Kayıt"
-    assert worksheet["D3"].value == "Eşleşen Kayıt"
-    assert worksheet["G3"].value == "MKYS Eksik"
-    assert worksheet["J3"].value == "TDMS Eksik"
-    assert worksheet["A7"].value == "Tutar Farkı"
-    assert worksheet["D7"].value == "Tüketim Farkı"
+    assert worksheet["A8"].value == "Toplam Kayıt"
+    assert worksheet["D8"].value == "Eşleşen Kayıt"
+    assert worksheet["G8"].value == "MKYS Eksik"
+    assert worksheet["J8"].value == "TDMS Eksik"
+    assert worksheet["A12"].value == "Tutar Farkı"
+    assert worksheet["D12"].value == "Tüketim Farkı"
 
 
 def test_dashboard_kpi_values() -> None:
@@ -75,12 +75,15 @@ def test_dashboard_kpi_values() -> None:
         build_summary(),
     )
 
-    assert worksheet["A4"].value == 3
-    assert worksheet["D4"].value == 2
-    assert worksheet["G4"].value == 3
-    assert worksheet["J4"].value == 1
-    assert worksheet["A8"].value == 1
-    assert worksheet["D8"].value == 2
+    summary = build_summary()
+
+    assert worksheet["A9"].value == summary.total_records
+    assert worksheet["D9"].value == summary.matched_records
+    assert worksheet["G9"].value == summary.missing_in_mkys
+    assert worksheet["J9"].value == summary.missing_in_tdms
+
+    assert worksheet["A13"].value == summary.amount_difference_count
+    assert worksheet["D13"].value == summary.consumption_difference_count
 
 
 def test_dashboard_prepared() -> None:
@@ -193,3 +196,19 @@ def test_dashboard_chart_titles() -> None:
 
     assert worksheet._charts[0].title is not None
     assert worksheet._charts[1].title is not None
+
+
+def test_dashboard_executive_summary() -> None:
+
+    workbook = Workbook()
+    worksheet = workbook.active
+
+    writer = DashboardWriter()
+
+    writer.write_dashboard(
+        worksheet,
+        build_summary(),
+    )
+
+    assert worksheet["A2"].value == "Executive Summary"
+    assert worksheet["A3"].value.startswith("Uzlaştırma Oranı")
