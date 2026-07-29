@@ -175,3 +175,11 @@ def test_dashboard_sheet_exists(
     workbook = load_workbook(output)
 
     assert "0_Dashboard" in workbook.sheetnames
+
+    worksheet = workbook["0_Dashboard"]
+
+    assert worksheet.page_setup.orientation == worksheet.ORIENTATION_LANDSCAPE
+    assert worksheet.page_setup.fitToWidth == 1
+    assert worksheet.page_setup.fitToHeight == 1
+    assert worksheet.print_area is not None
+    

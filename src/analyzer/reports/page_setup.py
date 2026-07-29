@@ -28,6 +28,25 @@ def prepare_worksheet(
     apply_page_layout(worksheet)
     apply_print_settings(worksheet)
 
+    # Yazdırma
+    worksheet.page_setup.orientation = worksheet.ORIENTATION_LANDSCAPE
+
+    worksheet.page_setup.fitToPage = True
+    worksheet.page_setup.fitToWidth = 1
+    worksheet.page_setup.fitToHeight = 1
+
+    worksheet.print_options.horizontalCentered = True
+
+    worksheet.print_area = "A1:Z25"
+
+    worksheet.page_margins = PageMargins(
+        left=0.3,
+        right=0.3,
+        top=0.5,
+        bottom=0.5,
+        header=0.2,
+        footer=0.2,
+    )
 
 def apply_freeze_panes(
     worksheet: Worksheet,

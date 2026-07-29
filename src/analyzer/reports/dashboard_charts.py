@@ -14,6 +14,13 @@ from openpyxl.chart import (
     Reference,
 )
 
+from .theme import (
+    CHART_WIDTH,
+    CHART_HEIGHT,
+    PIE_CHART_POSITION,
+    BAR_CHART_POSITION,
+)
+
 
 class DashboardCharts:
     """
@@ -62,9 +69,9 @@ class DashboardCharts:
 
         chart.title = "Giriş Hareketleri"
 
-        chart.height = 8
+        chart.height = CHART_HEIGHT
 
-        chart.width = 10
+        chart.width = CHART_WIDTH
 
         chart.add_data(
             data,
@@ -92,7 +99,7 @@ class DashboardCharts:
 
         worksheet.add_chart(
             chart,
-            "H3",
+            PIE_CHART_POSITION,
         )
 
 
@@ -137,8 +144,8 @@ class DashboardCharts:
         chart.y_axis.title = "Kayıt"
         chart.x_axis.title = "Kategori"
 
-        chart.height = 8
-        chart.width = 10
+        chart.height = CHART_HEIGHT
+        chart.width = CHART_WIDTH
 
         chart.add_data(
             data,
@@ -163,5 +170,5 @@ class DashboardCharts:
 
         worksheet.add_chart(
             chart,
-            "H20",
+            BAR_CHART_POSITION,
         )
