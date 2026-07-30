@@ -79,6 +79,16 @@ class DashboardWriter:
             summary,
         )
 
+        DashboardCharts.add_trend_chart(
+            worksheet,
+            summary,
+        )
+
+        DashboardCharts.add_supplier_chart(
+            worksheet,
+            summary,
+        )
+
         self._write_match_pie_chart(
             worksheet,
             summary,

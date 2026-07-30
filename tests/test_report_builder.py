@@ -1,43 +1,21 @@
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
-from analyzer.models.movement import Movement
-from analyzer.models.movement_type import MovementType
-from analyzer.reconciliation.result import ReconciliationResult
-from analyzer.reports.excel_report_builder import ExcelReportBuilder
+from openpyxl import load_workbook
+
 from analyzer.reconciliation.difference import (
     AmountDifference,
     ConsumptionDifference,
 )
+from analyzer.reconciliation.result import ReconciliationResult
+from analyzer.reports.excel_report_builder import ExcelReportBuilder
 
-from openpyxl import load_workbook
-
-
-def movement(
-    *,
-    amount: Decimal = Decimal("100"),
-) -> Movement:
-
-    return Movement(
-        source="MKYS",
-        movement_type=MovementType.ENTRY,
-        movement_date=date(2026, 1, 1),
-        tif_no="1",
-        voucher_no="",
-        document_no="",
-        invoice_no="",
-        amount=amount,
-        description="",
-        warehouse="",
-        budget_type="",
-        stock_code="",
-        stock_name="",
-        supplier="",
-        quantity=Decimal("1"),
-    )
+from tests.helpers.movement_factory import movement
+from tests.helpers.reconciliation_result_factory import (
+    reconciliation_result,
+)
 
 
 def test_excel_report_is_created(
@@ -45,7 +23,9 @@ def test_excel_report_is_created(
 ) -> None:
 
     result = ReconciliationResult(
-        matched=[movement()],
+        matched=[
+            movement(),
+        ],
     )
 
     output = tmp_path / "report.xlsx"
@@ -69,7 +49,7 @@ def test_excel_report_is_not_empty(
     builder = ExcelReportBuilder()
 
     builder.build(
-        ReconciliationResult(),
+        reconciliation_result(),
         output,
     )
 
@@ -109,6 +89,35 @@ def test_consumption_difference_sheet_has_conditional_formatting(
     assert len(sheet.conditional_formatting) > 0
 
 
+def test_amount_difference_sheet_is_created(
+    tmp_path: Path,
+) -> None:
+
+    difference = AmountDifference(
+        mkys=movement(amount=Decimal("100")),
+        tdms=movement(amount=Decimal("120")),
+    )
+
+    result = ReconciliationResult(
+        amount_differences=[
+            difference,
+        ],
+    )
+
+    output = tmp_path / "report.xlsx"
+
+    builder = ExcelReportBuilder()
+
+    builder.build(
+        result,
+        output,
+    )
+
+    workbook = load_workbook(output)
+
+    assert "5_Tutar_Farkları" in workbook.sheetnames
+
+
 def test_worksheet_page_setup(
     tmp_path: Path,
 ) -> None:
@@ -119,7 +128,9 @@ def test_worksheet_page_setup(
 
     builder.build(
         ReconciliationResult(
-            matched=[movement()],
+            matched=[
+                movement(),
+            ],
         ),
         output,
     )
@@ -128,33 +139,21 @@ def test_worksheet_page_setup(
 
     sheet = workbook["2_Giriş_Eşleşen"]
 
-    #
-    # Freeze Panes
-    #
     assert sheet.freeze_panes == "A4"
 
-    #
-    # AutoFilter
-    #
     assert sheet.auto_filter.ref is not None
 
-    #
-    # Landscape
-    #
     assert (
         sheet.page_setup.orientation
         == sheet.ORIENTATION_LANDSCAPE
     )
 
-    #
-    # A4
-    #
     assert int(sheet.page_setup.paperSize) == 9
 
-    #
-    # Print titles
-    #
-    assert sheet.print_title_rows.replace("$", "") == "1:3"
+    assert sheet.print_title_rows.replace(
+        "$",
+        "",
+    ) == "1:3"
 
 
 def test_dashboard_sheet_exists(
@@ -167,7 +166,9 @@ def test_dashboard_sheet_exists(
 
     builder.build(
         ReconciliationResult(
-            matched=[movement()],
+            matched=[
+                movement(),
+            ],
         ),
         output,
     )
@@ -178,8 +179,14 @@ def test_dashboard_sheet_exists(
 
     worksheet = workbook["0_Dashboard"]
 
-    assert worksheet.page_setup.orientation == worksheet.ORIENTATION_LANDSCAPE
+    assert (
+        worksheet.page_setup.orientation
+        == worksheet.ORIENTATION_LANDSCAPE
+    )
+
     assert worksheet.page_setup.fitToWidth == 1
+
     assert worksheet.page_setup.fitToHeight == 1
+
     assert worksheet.print_area is not None
     

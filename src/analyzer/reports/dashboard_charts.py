@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from openpyxl.chart import PieChart, Reference
+from openpyxl.chart import LineChart, Reference
+from openpyxl.chart.axis import ChartLines
 from openpyxl.chart.label import DataLabelList
 from openpyxl.chart.series import DataPoint
 from openpyxl.chart.shapes import GraphicalProperties
@@ -171,4 +173,191 @@ class DashboardCharts:
         worksheet.add_chart(
             chart,
             BAR_CHART_POSITION,
+        )
+
+
+    @staticmethod
+    def add_trend_chart(
+        worksheet: Worksheet,
+        summary: DashboardSummary,
+    ) -> None:
+        """
+        Aylık uzlaştırma oranı trend grafiğini oluşturur.
+        """
+
+        #
+        # Grafik verisi
+        #
+        worksheet["AA1"] = "Ay"
+        worksheet["AB1"] = "Uzlaştırma"
+
+        for row, month in enumerate(
+            summary.trend.months,
+            start=2,
+        ):
+
+            worksheet.cell(
+                row=row,
+                column=27,
+            ).value = month.label
+
+            worksheet.cell(
+                row=row,
+                column=28,
+            ).value = month.match_rate
+
+        #
+        # Grafik
+        #
+        chart = LineChart()
+
+        chart.title = "Aylık Uzlaştırma Oranı"
+
+        chart.style = 10
+
+        chart.height = 7
+
+        chart.width = 14
+
+        chart.y_axis.title = "%"
+
+        chart.x_axis.title = "Ay"
+
+        chart.legend = None
+
+        chart.y_axis.majorGridlines = ChartLines()
+
+        #
+        # Veri
+        #
+        data = Reference(
+            worksheet,
+            min_col=28,
+            min_row=1,
+            max_row=len(summary.trend.months) + 1,
+        )
+
+        categories = Reference(
+            worksheet,
+            min_col=27,
+            min_row=2,
+            max_row=len(summary.trend.months) + 1,
+        )
+
+        chart.add_data(
+            data,
+            titles_from_data=True,
+        )
+
+        chart.set_categories(
+            categories,
+        )        
+
+        #
+        # Y ekseni
+        #
+        chart.y_axis.scaling.min = 0
+
+        chart.y_axis.scaling.max = 100
+
+        #
+        # Dashboard konumu
+        #
+        worksheet.add_chart(
+            chart,
+            "M20",
+        )
+
+    @staticmethod
+    def add_supplier_chart(
+        worksheet: Worksheet,
+        summary: DashboardSummary,
+    ) -> None:
+        """
+        En çok hareket bulunan tedarikçileri gösteren grafik.
+        """
+
+        #
+        # Grafik verisi
+        #
+        worksheet["AA20"] = "Tedarikçi"
+        worksheet["AB20"] = "Kayıt"
+
+        for row, supplier in enumerate(
+            summary.suppliers[:10],
+            start=21,
+        ):
+
+            worksheet.cell(
+                row=row,
+                column=27,
+            ).value = supplier.supplier
+
+            worksheet.cell(
+                row=row,
+                column=28,
+            ).value = supplier.total_records
+
+        #
+        # Grafik
+        #
+        chart = BarChart()
+
+        chart.type = "bar"
+
+        chart.style = 10
+
+        chart.title = "En Aktif Tedarikçiler"
+
+        chart.height = CHART_HEIGHT
+
+        chart.width = CHART_WIDTH
+
+        chart.y_axis.title = "Tedarikçi"
+
+        chart.x_axis.title = "Kayıt"
+
+        chart.legend = None
+
+        data = Reference(
+            worksheet,
+            min_col=28,
+            min_row=20,
+            max_row=min(
+                20 + len(summary.suppliers),
+                30,
+            ),
+        )   
+
+        categories = Reference(
+            worksheet,
+            min_col=27,
+            min_row=21,
+            max_row=min(
+                20 + len(summary.suppliers),
+                30,
+            ),
+        )
+
+        chart.add_data(
+            data,
+            titles_from_data=True,
+        )
+
+        chart.set_categories(
+            categories,
+        )
+
+        chart.series[0].graphicalProperties = (
+            GraphicalProperties(
+                solidFill="4472C4",
+            )
+        )
+
+        chart.dataLabels = DataLabelList()
+        chart.dataLabels.showVal = True
+
+        worksheet.add_chart(
+            chart,
+            "M38",
         )

@@ -1,12 +1,14 @@
-from analyzer.reports.dashboard_summary import DashboardSummary
 from analyzer.reports.executive_summary import ExecutiveSummary
 from analyzer.reports.report_status import ReportStatus
 
+from .helpers.dashboard_summary_factory import dashboard_summary
+
+
 def test_executive_summary_good_status() -> None:
 
-    summary = DashboardSummary(
-        total_records=10,
-        matched_records=10,
+    summary = dashboard_summary(
+        total_records=100,
+        matched_records=100,
         missing_in_mkys=0,
         missing_in_tdms=0,
         amount_difference_count=0,
@@ -17,12 +19,16 @@ def test_executive_summary_good_status() -> None:
 
     assert result.status is ReportStatus.GOOD
 
-    assert "✔ Uzlaştırma başarıyla tamamlandı." in result.lines
+    assert "Uzlaştırma Oranı: %100.0" in result.lines[0]
+
+    assert "100 kayıt başarıyla eşleşti." in result.lines[1]
+
+    assert "✔ Uzlaştırma başarıyla tamamlandı." in result.lines[-1]
 
 
 def test_executive_summary_warning_status() -> None:
 
-    summary = DashboardSummary(
+    summary = dashboard_summary(
         total_records=10,
         matched_records=9,
         missing_in_mkys=1,
@@ -35,12 +41,12 @@ def test_executive_summary_warning_status() -> None:
 
     assert result.status is ReportStatus.WARNING
 
-    assert "⚠ Birkaç kayıt manuel kontrol gerektiriyor." in result.lines
+    assert "⚠ Birkaç kayıt manuel kontrol gerektiriyor." in result.lines[-1]
 
 
 def test_executive_summary_critical_status() -> None:
 
-    summary = DashboardSummary(
+    summary = dashboard_summary(
         total_records=10,
         matched_records=5,
         missing_in_mkys=3,
@@ -53,4 +59,4 @@ def test_executive_summary_critical_status() -> None:
 
     assert result.status is ReportStatus.CRITICAL
 
-    assert "✖ Çok sayıda farklılık tespit edildi." in result.lines
+    assert "✖ Çok sayıda farklılık tespit edildi." in result.lines[-1]

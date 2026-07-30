@@ -3,7 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from analyzer.reconciliation.result import ReconciliationResult
-
+from .analytics.trend_summary import TrendSummary
+from analyzer.reports.analytics.supplier_summary import SupplierSummary
 
 @dataclass(slots=True)
 class DashboardSummary:
@@ -20,6 +21,10 @@ class DashboardSummary:
 
     consumption_difference_count: int
 
+    trend: TrendSummary
+
+    suppliers: list[SupplierSummary]
+
     @classmethod
     def from_result(
         cls,
@@ -30,12 +35,14 @@ class DashboardSummary:
             total_records=(
                 len(result.matched)
                 + len(result.missing_in_tdms)
-            ),
-            matched_records=len(result.matched),
-            missing_in_mkys=len(result.missing_in_mkys),
-            missing_in_tdms=len(result.missing_in_tdms),
-            amount_difference_count=len(result.amount_differences),
-            consumption_difference_count=len(
-                result.consumption_differences
-            ),
-        )
+        ),
+        matched_records=len(result.matched),
+        missing_in_mkys=len(result.missing_in_mkys),
+        missing_in_tdms=len(result.missing_in_tdms),
+        amount_difference_count=len(result.amount_differences),
+        consumption_difference_count=len(
+            result.consumption_differences
+        ),
+        trend=TrendSummary.from_result(result),
+        suppliers=SupplierSummary.from_result(result),
+    )

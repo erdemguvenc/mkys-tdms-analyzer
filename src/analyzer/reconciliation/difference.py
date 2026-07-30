@@ -15,6 +15,13 @@ class AmountDifference:
     mkys: Movement
     tdms: Movement
 
+    @property
+    def difference(self) -> Decimal:
+        return (
+            self.mkys.amount
+            - self.tdms.amount
+        )
+
 
 @dataclass(slots=True)
 class ConsumptionDifference:
