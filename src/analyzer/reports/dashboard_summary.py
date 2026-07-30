@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from analyzer.reconciliation.result import ReconciliationResult
 from .analytics.trend_summary import TrendSummary
 from analyzer.reports.analytics.supplier_summary import SupplierSummary
+from analyzer.reports.analytics.warehouse_summary import WarehouseSummary
+from analyzer.reports.analytics.top_difference_summary import TopDifferenceSummary
 
 @dataclass(slots=True)
 class DashboardSummary:
@@ -24,6 +26,10 @@ class DashboardSummary:
     trend: TrendSummary
 
     suppliers: list[SupplierSummary]
+
+    warehouses: list[WarehouseSummary]
+
+    top_differences: list[TopDifferenceSummary]
 
     @classmethod
     def from_result(
@@ -45,4 +51,6 @@ class DashboardSummary:
         ),
         trend=TrendSummary.from_result(result),
         suppliers=SupplierSummary.from_result(result),
+        warehouses=WarehouseSummary.from_result(result),
+        top_differences=TopDifferenceSummary.from_result(result),
     )

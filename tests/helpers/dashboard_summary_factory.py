@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from analyzer.reports.analytics.supplier_summary import SupplierSummary
 from analyzer.reports.analytics.trend_summary import TrendSummary
+from analyzer.reports.analytics.warehouse_summary import WarehouseSummary
 from analyzer.reports.dashboard_summary import DashboardSummary
-
+from analyzer.reports.analytics.top_difference_summary import TopDifferenceSummary
 
 def dashboard_summary(
     *,
@@ -13,6 +16,8 @@ def dashboard_summary(
     consumption_difference_count: int = 1,
     trend: TrendSummary | None = None,
     suppliers: list[SupplierSummary] | None = None,
+    warehouses: list[WarehouseSummary] | None = None,
+    top_differences: list[TopDifferenceSummary] | None = None,
 ) -> DashboardSummary:
 
     if trend is None:
@@ -23,6 +28,12 @@ def dashboard_summary(
     if suppliers is None:
         suppliers = []
 
+    if warehouses is None:
+        warehouses = []
+
+    if top_differences is None:
+        top_differences = []
+
     return DashboardSummary(
         total_records=total_records,
         matched_records=matched_records,
@@ -32,4 +43,6 @@ def dashboard_summary(
         consumption_difference_count=consumption_difference_count,
         trend=trend,
         suppliers=suppliers,
+        warehouses=warehouses,
+        top_differences=top_differences,
     )

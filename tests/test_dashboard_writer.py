@@ -110,7 +110,7 @@ def test_dashboard_contains_pie_chart() -> None:
 
     charts = worksheet._charts
 
-    assert len(charts) == 4
+    assert len(charts) == 6
 
     assert isinstance(
         charts[0],
@@ -154,7 +154,7 @@ def test_dashboard_chart_types() -> None:
 
     charts = worksheet._charts
 
-    assert len(charts) == 4
+    assert len(charts) == 6
 
     assert isinstance(charts[0], PieChart)
     assert isinstance(charts[1], BarChart)
@@ -175,7 +175,7 @@ def test_dashboard_chart_titles() -> None:
 
     charts = worksheet._charts
 
-    assert len(charts) == 4
+    assert len(charts) == 6
 
     assert (
         charts[0].title.tx.rich.p[0].r[0].t

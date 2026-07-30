@@ -89,6 +89,16 @@ class DashboardWriter:
             summary,
         )
 
+        DashboardCharts.add_warehouse_chart(
+            worksheet,
+            summary,
+        )
+
+        DashboardCharts.add_top_difference_chart(
+            worksheet,
+            summary,
+        )
+
         self._write_match_pie_chart(
             worksheet,
             summary,
