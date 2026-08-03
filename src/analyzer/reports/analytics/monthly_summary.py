@@ -32,11 +32,7 @@ class MonthlySummary:
         if self.total_records == 0:
             return 0.0
 
-        return (
-            self.matched_records
-            / self.total_records
-            * 100
-        )
+        return self.matched_records / self.total_records * 100
 
     @property
     def difference_count(self) -> int:

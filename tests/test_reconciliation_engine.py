@@ -16,7 +16,6 @@ def create_movement(
     description: str = "",
     movement_type: MovementType = MovementType.ENTRY,
 ) -> Movement:
-
     return Movement(
         source=source,
         movement_type=movement_type,
@@ -37,7 +36,6 @@ def create_movement(
 
 
 def test_reconcile_matching_entries() -> None:
-
     engine = ReconciliationEngine()
 
     mkys = [
@@ -68,7 +66,6 @@ def test_reconcile_matching_entries() -> None:
 
 
 def test_reconcile_amount_difference() -> None:
-
     engine = ReconciliationEngine()
 
     mkys = [
@@ -97,7 +94,6 @@ def test_reconcile_amount_difference() -> None:
 
 
 def test_reconcile_missing_in_tdms() -> None:
-
     engine = ReconciliationEngine()
 
     mkys = [
@@ -118,7 +114,6 @@ def test_reconcile_missing_in_tdms() -> None:
 
 
 def test_reconcile_missing_in_mkys() -> None:
-
     engine = ReconciliationEngine()
 
     tdms = [
@@ -139,7 +134,6 @@ def test_reconcile_missing_in_mkys() -> None:
 
 
 def test_reconcile_consumption_difference() -> None:
-
     engine = ReconciliationEngine()
 
     mkys = [
@@ -162,7 +156,6 @@ def test_reconcile_consumption_difference() -> None:
 
 
 def test_reconcile_opening_match() -> None:
-
     engine = ReconciliationEngine()
 
     mkys = [
@@ -193,7 +186,6 @@ def test_reconcile_opening_match() -> None:
 
 
 def test_reconcile_opening_missing_in_tdms() -> None:
-
     engine = ReconciliationEngine()
 
     mkys = [
@@ -215,7 +207,6 @@ def test_reconcile_opening_missing_in_tdms() -> None:
 
 
 def test_reconcile_opening_missing_in_mkys() -> None:
-
     engine = ReconciliationEngine()
 
     tdms = [

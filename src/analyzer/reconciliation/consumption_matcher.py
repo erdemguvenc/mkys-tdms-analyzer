@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from analyzer.models.movement import Movement
+
 from .difference import ConsumptionDifference
 from .grouping import MonthlyConsumptionGrouping
 
@@ -14,27 +16,18 @@ class ConsumptionMatcher:
 
     def match(
         self,
-        mkys,
-        tdms,
+        mkys: list[Movement],
+        tdms: list[Movement],
     ) -> list[ConsumptionDifference]:
+        mkys_groups = MonthlyConsumptionGrouping.group(mkys)
 
-        mkys_groups = MonthlyConsumptionGrouping.group(
-            mkys
-        )
-
-        tdms_groups = MonthlyConsumptionGrouping.group(
-            tdms
-        )
+        tdms_groups = MonthlyConsumptionGrouping.group(tdms)
 
         differences: list[ConsumptionDifference] = []
 
-        months = (
-            set(mkys_groups)
-            | set(tdms_groups)
-        )
+        months = set(mkys_groups) | set(tdms_groups)
 
         for key in sorted(months):
-
             mkys_total = mkys_groups.get(
                 key,
                 Decimal("0"),
@@ -46,7 +39,6 @@ class ConsumptionMatcher:
             )
 
             if mkys_total != tdms_total:
-
                 differences.append(
                     ConsumptionDifference(
                         year=key[0],

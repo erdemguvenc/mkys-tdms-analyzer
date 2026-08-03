@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from analyzer.reports.analytics.supplier_summary import SupplierSummary
+from analyzer.reports.analytics.top_difference_summary import TopDifferenceSummary
 from analyzer.reports.analytics.trend_summary import TrendSummary
 from analyzer.reports.analytics.warehouse_summary import WarehouseSummary
 from analyzer.reports.dashboard_summary import DashboardSummary
-from analyzer.reports.analytics.top_difference_summary import TopDifferenceSummary
+
 
 def dashboard_summary(
     *,
@@ -19,7 +20,6 @@ def dashboard_summary(
     warehouses: list[WarehouseSummary] | None = None,
     top_differences: list[TopDifferenceSummary] | None = None,
 ) -> DashboardSummary:
-
     if trend is None:
         trend = TrendSummary(
             months=[],

@@ -12,18 +12,12 @@ class TopDifferenceSummary:
     En büyük tutar farklarını temsil eder.
     """
 
-    tif_no: str
-
+    tif_no: str | None
     stock_code: str
-
     stock_name: str
-
     supplier: str
-
     mkys_amount: Decimal
-
     tdms_amount: Decimal
-
     difference: Decimal
 
     @classmethod
@@ -32,11 +26,9 @@ class TopDifferenceSummary:
         result: ReconciliationResult,
         limit: int = 10,
     ) -> list["TopDifferenceSummary"]:
-
         summaries: list[TopDifferenceSummary] = []
 
         for item in result.amount_differences:
-
             summaries.append(
                 cls(
                     tif_no=item.mkys.tif_no,
@@ -46,8 +38,7 @@ class TopDifferenceSummary:
                     mkys_amount=item.mkys.amount,
                     tdms_amount=item.tdms.amount,
                     difference=abs(
-                        item.mkys.amount
-                        - item.tdms.amount
+                        item.mkys.amount - item.tdms.amount,
                     ),
                 )
             )

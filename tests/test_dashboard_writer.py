@@ -3,27 +3,23 @@ from __future__ import annotations
 from openpyxl import Workbook
 from openpyxl.chart import (
     BarChart,
-    LineChart,
     PieChart,
 )
 
 from analyzer.reports.dashboard_summary import DashboardSummary
 from analyzer.reports.dashboard_writer import DashboardWriter
-
 from tests.helpers.reconciliation_result_factory import (
     reconciliation_result,
 )
 
 
 def build_summary() -> DashboardSummary:
-
     return DashboardSummary.from_result(
         reconciliation_result(),
     )
 
 
 def test_dashboard_title() -> None:
-
     workbook = Workbook()
 
     worksheet = workbook.active
@@ -33,14 +29,10 @@ def test_dashboard_title() -> None:
         build_summary(),
     )
 
-    assert (
-        worksheet["A1"].value
-        == "MKYS - TDMS Uzlaştırma Dashboard"
-    )
+    assert worksheet["A1"].value == "MKYS - TDMS Uzlaştırma Dashboard"
 
 
 def test_dashboard_kpi_titles() -> None:
-
     workbook = Workbook()
 
     worksheet = workbook.active
@@ -60,7 +52,6 @@ def test_dashboard_kpi_titles() -> None:
 
 
 def test_dashboard_kpi_values() -> None:
-
     workbook = Workbook()
 
     worksheet = workbook.active
@@ -82,7 +73,6 @@ def test_dashboard_kpi_values() -> None:
 
 
 def test_dashboard_prepared() -> None:
-
     workbook = Workbook()
 
     worksheet = workbook.active
@@ -98,7 +88,6 @@ def test_dashboard_prepared() -> None:
 
 
 def test_dashboard_contains_pie_chart() -> None:
-
     workbook = Workbook()
 
     worksheet = workbook.active
@@ -110,7 +99,7 @@ def test_dashboard_contains_pie_chart() -> None:
 
     charts = worksheet._charts
 
-    assert len(charts) == 6
+    assert len(charts) == 2
 
     assert isinstance(
         charts[0],
@@ -121,7 +110,6 @@ def test_dashboard_contains_pie_chart() -> None:
 
 
 def test_dashboard_contains_bar_chart() -> None:
-
     workbook = Workbook()
 
     worksheet = workbook.active
@@ -142,7 +130,6 @@ def test_dashboard_contains_bar_chart() -> None:
 
 
 def test_dashboard_chart_types() -> None:
-
     workbook = Workbook()
 
     worksheet = workbook.active
@@ -154,16 +141,13 @@ def test_dashboard_chart_types() -> None:
 
     charts = worksheet._charts
 
-    assert len(charts) == 6
+    assert len(charts) == 2
 
     assert isinstance(charts[0], PieChart)
     assert isinstance(charts[1], BarChart)
-    assert isinstance(charts[2], LineChart)
-    assert isinstance(charts[3], BarChart)
 
 
 def test_dashboard_chart_titles() -> None:
-
     workbook = Workbook()
 
     worksheet = workbook.active
@@ -175,31 +159,13 @@ def test_dashboard_chart_titles() -> None:
 
     charts = worksheet._charts
 
-    assert len(charts) == 6
+    assert len(charts) == 2
 
-    assert (
-        charts[0].title.tx.rich.p[0].r[0].t
-        == "Giriş Hareketleri"
-    )
-
-    assert (
-        charts[1].title.tx.rich.p[0].r[0].t
-        == "MKYS - TDMS Fark Analizi"
-    )
-
-    assert (
-        charts[2].title.tx.rich.p[0].r[0].t
-        == "Aylık Uzlaştırma Oranı"
-    )
-
-    assert (
-        charts[3].title.tx.rich.p[0].r[0].t
-        == "En Aktif Tedarikçiler"
-    )
+    assert charts[0].title.tx.rich.p[0].r[0].t == "Giriş Hareketleri"
+    assert charts[1].title.tx.rich.p[0].r[0].t == "MKYS - TDMS Fark Analizi"
 
 
 def test_dashboard_executive_summary() -> None:
-
     workbook = Workbook()
 
     worksheet = workbook.active
@@ -217,14 +183,10 @@ def test_dashboard_executive_summary() -> None:
         "Uzlaştırma Oranı",
     )
 
-    assert (
-        "kayıt başarıyla eşleşti"
-        in worksheet["A4"].value
-    )
+    assert "kayıt başarıyla eşleşti" in worksheet["A4"].value
 
 
 def test_dashboard_quality_progress() -> None:
-
     workbook = Workbook()
 
     worksheet = workbook.active

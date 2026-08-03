@@ -1,48 +1,58 @@
 from __future__ import annotations
 
+from typing import cast
+
+from openpyxl.cell import Cell
+from openpyxl.chart import (
+    BarChart,
+    PieChart,
+)
 from openpyxl.formatting.rule import DataBarRule
 from openpyxl.worksheet.worksheet import Worksheet
 
 from analyzer.reports.dashboard_summary import DashboardSummary
-
-from analyzer.reports.executive_summary import ExecutiveSummary
 from analyzer.reports.executive_summary import (
     ExecutiveSummary,
     ExecutiveSummaryResult,
 )
 from analyzer.reports.report_status import ReportStatus
 
-from .dashboard_charts import DashboardCharts
-
 from .page_setup import prepare_worksheet
-from .theme import THEME_CHART_PRIMARY
 from .styles import (
     apply_kpi_card,
     apply_kpi_title,
     apply_kpi_value,
-    apply_summary_box,
+    apply_status_badge,
+    apply_summary_critical,
+    apply_summary_success,
     apply_summary_text,
     apply_summary_title,
-    apply_summary_success,
     apply_summary_warning,
-    apply_summary_critical,
-    apply_status_badge,
-    apply_title,    
+    apply_title,
 )
+from .theme import THEME_CHART_PRIMARY
 
 
 class DashboardWriter:
-
     def write_dashboard(
         self,
         worksheet: Worksheet,
         summary: DashboardSummary,
     ) -> None:
+        """
+        Dashboard sayfasını oluşturur.
+        """
 
+        #
+        # Başlık
+        #
         self._write_dashboard_title(
             worksheet,
         )
 
+        #
+        # Executive Summary
+        #
         summary_builder = ExecutiveSummary()
 
         result = summary_builder.build(
@@ -59,6 +69,9 @@ class DashboardWriter:
             result,
         )
 
+        #
+        # KPI Kartları
+        #
         self._write_quality_progress(
             worksheet,
             summary,
@@ -69,64 +82,30 @@ class DashboardWriter:
             summary,
         )
 
-        DashboardCharts.add_match_pie_chart(
+        #
+        # Dashboard Grafikleri
+        #
+        self._write_charts(
             worksheet,
             summary,
         )
 
-        DashboardCharts.add_consumption_bar_chart(
-            worksheet,
-            summary,
-        )
-
-        DashboardCharts.add_trend_chart(
-            worksheet,
-            summary,
-        )
-
-        DashboardCharts.add_supplier_chart(
-            worksheet,
-            summary,
-        )
-
-        DashboardCharts.add_warehouse_chart(
-            worksheet,
-            summary,
-        )
-
-        DashboardCharts.add_top_difference_chart(
-            worksheet,
-            summary,
-        )
-
-        self._write_match_pie_chart(
-            worksheet,
-            summary,
-        )
-
-        self._write_consumption_chart(
-            worksheet,
-            summary,
-        )
-
-        prepare_worksheet(
+        #
+        # Sayfa hazırlığı
+        #
+        self._prepare_sheet(
             worksheet,
         )
 
+    #
+    # Bölümler
+    #
 
     def _write_dashboard_title(
         self,
         worksheet: Worksheet,
     ) -> None:
-        """
-        Dashboard başlığını yazar.
-        """
-
-        title = worksheet.cell(
-            row=1,
-            column=1,
-        )
-
+        title = worksheet["A1"]
         title.value = "MKYS - TDMS Uzlaştırma Dashboard"
 
         apply_title(title)
@@ -138,6 +117,100 @@ class DashboardWriter:
             end_column=12,
         )
 
+    def _write_executive_summary(
+        self,
+        worksheet: Worksheet,
+        result: ExecutiveSummaryResult,
+    ) -> None:
+        """
+        Executive Summary bölümünü oluşturur.
+        """
+
+        #
+        # Kutu
+        #
+        worksheet.merge_cells("A2:J2")
+        worksheet.merge_cells("A3:J3")
+        worksheet.merge_cells("A4:J4")
+        worksheet.merge_cells("A5:J5")
+        worksheet.merge_cells("A6:J6")
+
+        #
+        # Duruma göre kutuyu boya
+        #
+        if result.status is ReportStatus.GOOD:
+            apply_summary_success(
+                worksheet,
+                first_row=2,
+                last_row=6,
+                first_column=1,
+                last_column=10,
+            )
+
+        elif result.status is ReportStatus.WARNING:
+            apply_summary_warning(
+                worksheet,
+                first_row=2,
+                last_row=6,
+                first_column=1,
+                last_column=10,
+            )
+
+        else:
+            apply_summary_critical(
+                worksheet,
+                first_row=2,
+                last_row=6,
+                first_column=1,
+                last_column=10,
+            )
+
+        #
+        # Başlık
+        #
+        title = worksheet["A2"]
+        title.value = "Executive Summary"
+
+        apply_summary_title(title)
+
+        #
+        # Metinler
+        #
+        cells = [
+            worksheet["A3"],
+            worksheet["A4"],
+            worksheet["A5"],
+            worksheet["A6"],
+        ]
+
+        for cell, line in zip(cells, result.lines):
+            cell.value = line
+            apply_summary_text(cell)
+
+    def _write_status_badge(
+        self,
+        worksheet: Worksheet,
+        result: ExecutiveSummaryResult,
+    ) -> None:
+        """
+        Dashboard durum rozetini oluşturur.
+        """
+
+        badge = worksheet["K2"]
+
+        if result.status is ReportStatus.GOOD:
+            badge.value = "GOOD"
+
+        elif result.status is ReportStatus.WARNING:
+            badge.value = "WARNING"
+
+        else:
+            badge.value = "CRITICAL"
+
+        apply_status_badge(
+            badge,
+            result.status,
+        )
 
     def _write_kpi_card(
         self,
@@ -177,25 +250,22 @@ class DashboardWriter:
         title_cell = worksheet.cell(
             row=row,
             column=column,
-        )   
+        )
 
+        title_cell = cast(Cell, title_cell)
         title_cell.value = f"{icon} {title}"
 
-        apply_kpi_title(
-            title_cell,
-        )
+        apply_kpi_title(title_cell)
 
         value_cell = worksheet.cell(
             row=row + 1,
             column=column,
         )
 
+        value_cell = cast(Cell, value_cell)
         value_cell.value = value
 
-        apply_kpi_value(
-            value_cell,
-        )
-
+        apply_kpi_value(value_cell)
 
     def _write_kpis(
         self,
@@ -203,7 +273,7 @@ class DashboardWriter:
         summary: DashboardSummary,
     ) -> None:
         """
-        KPI kartlarını oluşturur.
+        Dashboard KPI kartlarını oluşturur.
         """
 
         cards = [
@@ -252,7 +322,6 @@ class DashboardWriter:
         ]
 
         for icon, title, value, row, column in cards:
-
             self._write_kpi_card(
                 worksheet,
                 icon,
@@ -262,172 +331,25 @@ class DashboardWriter:
                 column,
             )
 
-
-    def _write_match_pie_chart(
-        self,
-        worksheet: Worksheet,
-        summary: DashboardSummary,
-    ) -> None:
-        """
-        Eşleşme durumunu gösteren pasta grafiği oluşturur.
-        """
-
-        # Sprint 4.3.3
-        pass
-
-
-    def _write_consumption_chart(
-        self,
-        worksheet: Worksheet,
-        summary: DashboardSummary,
-    ) -> None:
-        """
-        Aylık tüketim karşılaştırma grafiğini oluşturur.
-        """
-
-        # Sprint 4.3.4
-        pass
-
-
-    def _write_executive_summary(
-        self,
-        worksheet: Worksheet,
-        result: ExecutiveSummaryResult,
-    ) -> None:
-        """
-        Dashboard'a yönetici özetini yazar.
-        """
-
-        #
-        # Summary kutusu
-        #
-        if result.status is ReportStatus.GOOD:
-
-            apply_summary_success(
-            worksheet,
-            first_row=2,
-            last_row=6,
-            first_column=1,
-            last_column=12,
-        )
-
-        elif result.status is ReportStatus.WARNING:
-
-            apply_summary_warning(
-            worksheet,
-            first_row=2,
-            last_row=6,
-            first_column=1,
-            last_column=12,
-        )
-
-        else:
-
-            apply_summary_critical(
-                worksheet,
-                first_row=2,
-                last_row=6,
-                first_column=1,
-                last_column=12,
-            )
-
-        #
-        # Başlık
-        #
-        title = worksheet.cell(
-            row=2,
-            column=1,
-        )
-
-        if result.status is ReportStatus.GOOD:
-
-            title_text = "✔ Executive Summary"
-
-        elif result.status is ReportStatus.WARNING:
-
-            title_text = "⚠ Executive Summary"
-
-        else:
-
-            title_text = "✖ Executive Summary"
-
-        title.value = title_text
-
-        apply_summary_title(
-            title,
-        )
-
-        #
-        # Özet satırları
-        #
-        for index, line in enumerate(result.lines):
-
-            cell = worksheet.cell(
-                row=3 + index,
-                column=1,
-            )
-
-            cell.value = line
-
-            apply_summary_text(
-                cell,
-            )
-
-
-    def _write_status_badge(
-        self,
-        worksheet: Worksheet,
-        result: ExecutiveSummaryResult,
-    ) -> None:
-
-        badge = worksheet.cell(
-            row=2,
-            column=12,
-        )
-
-        if result.status is ReportStatus.GOOD:
-
-            badge.value = "GOOD"
-
-        elif result.status is ReportStatus.WARNING:
-
-            badge.value = "WARNING"
-
-        else:
-
-            badge.value = "CRITICAL"
-
-        apply_status_badge(
-            badge,
-            result.status,
-        )
-
-
     def _write_quality_progress(
         self,
         worksheet: Worksheet,
         summary: DashboardSummary,
     ) -> None:
         """
-        Dashboard kalite yüzdesini yazar ve progress bar uygular.
+        Dashboard kalite yüzdesini yazar.
         """
+
+        worksheet["J7"] = "Kalite"
 
         quality = 0.0
 
         if summary.total_records:
+            quality = summary.matched_records / summary.total_records
 
-            quality = (
-                summary.matched_records
-                / summary.total_records
-                * 100
-            )
-
-        title = worksheet["J7"]
-        title.value = "Kalite"
-
-        value = worksheet["K7"]
-        value.value = quality / 100
-        value.number_format = "0%"
+        cell = worksheet["K7"]
+        cell.value = quality
+        cell.number_format = "0%"
 
         worksheet.conditional_formatting.add(
             "K7",
@@ -438,4 +360,104 @@ class DashboardWriter:
                 end_value=1,
                 color=THEME_CHART_PRIMARY,
             ),
+        )
+
+    #
+    # Grafikler
+    #
+
+    def _write_charts(
+        self,
+        worksheet: Worksheet,
+        summary: DashboardSummary,
+    ) -> None:
+        self._write_match_pie_chart(
+            worksheet,
+            summary,
+        )
+
+        self._write_consumption_chart(
+            worksheet,
+            summary,
+        )
+
+    def _write_match_pie_chart(
+        self,
+        worksheet: Worksheet,
+        summary: DashboardSummary,
+    ) -> None:
+        """
+        Eşleşme durumunu gösteren pasta grafiği.
+        """
+
+        worksheet["N1"] = "Durum"
+        worksheet["O1"] = "Kayıt"
+
+        worksheet["N2"] = "Eşleşen"
+        worksheet["O2"] = summary.matched_records
+
+        worksheet["N3"] = "MKYS Eksik"
+        worksheet["O3"] = summary.missing_in_mkys
+
+        worksheet["N4"] = "TDMS Eksik"
+        worksheet["O4"] = summary.missing_in_tdms
+
+        chart = PieChart()
+
+        chart.title = "Giriş Hareketleri"
+
+        chart.height = 7
+        chart.width = 14
+
+        worksheet.add_chart(
+            chart,
+            "M2",
+        )
+
+    def _write_consumption_chart(
+        self,
+        worksheet: Worksheet,
+        summary: DashboardSummary,
+    ) -> None:
+        """
+        Tutar ve tüketim farklarını gösteren sütun grafiği.
+        """
+
+        worksheet["R1"] = "Kategori"
+        worksheet["S1"] = "Kayıt"
+
+        worksheet["R2"] = "Tutar Farkı"
+        worksheet["S2"] = summary.amount_difference_count
+
+        worksheet["R3"] = "Tüketim Farkı"
+        worksheet["S3"] = summary.consumption_difference_count
+
+        chart = BarChart()
+
+        chart.type = "col"
+        chart.style = 10
+
+        chart.title = "MKYS - TDMS Fark Analizi"
+
+        chart.y_axis.title = "Kayıt"
+        chart.x_axis.title = "Kategori"
+
+        chart.height = 7
+        chart.width = 14
+
+        worksheet.add_chart(
+            chart,
+            "M20",
+        )
+
+    #
+    # Yardımcılar
+    #
+
+    def _prepare_sheet(
+        self,
+        worksheet: Worksheet,
+    ) -> None:
+        prepare_worksheet(
+            worksheet,
         )

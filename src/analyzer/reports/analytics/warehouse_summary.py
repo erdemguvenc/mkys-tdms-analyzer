@@ -25,29 +25,22 @@ class WarehouseSummary:
 
     @property
     def match_rate(self) -> float:
-
         if self.total_records == 0:
             return 0.0
 
-        return (
-            self.matched_records
-            / self.total_records
-            * 100
-        )
+        return self.matched_records / self.total_records * 100
 
     @classmethod
     def from_result(
         cls,
         result: ReconciliationResult,
     ) -> list["WarehouseSummary"]:
-
         grouped: dict[str, WarehouseSummary] = {}
 
         #
         # Eşleşen kayıtlar
         #
         for movement in result.matched:
-
             summary = grouped.setdefault(
                 movement.warehouse,
                 cls(
@@ -67,7 +60,6 @@ class WarehouseSummary:
         # TDMS'de eksik
         #
         for movement in result.missing_in_tdms:
-
             summary = grouped.setdefault(
                 movement.warehouse,
                 cls(
@@ -87,7 +79,6 @@ class WarehouseSummary:
         # MKYS'de eksik
         #
         for movement in result.missing_in_mkys:
-
             summary = grouped.setdefault(
                 movement.warehouse,
                 cls(
@@ -107,7 +98,6 @@ class WarehouseSummary:
         # Tutar farkları
         #
         for difference in result.amount_differences:
-
             warehouse = difference.mkys.warehouse
 
             summary = grouped.setdefault(

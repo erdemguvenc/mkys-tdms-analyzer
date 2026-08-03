@@ -11,7 +11,6 @@ from analyzer.reconciliation.difference import (
 )
 from analyzer.reconciliation.result import ReconciliationResult
 from analyzer.reports.excel_report_builder import ExcelReportBuilder
-
 from tests.helpers.movement_factory import movement
 from tests.helpers.reconciliation_result_factory import (
     reconciliation_result,
@@ -21,7 +20,6 @@ from tests.helpers.reconciliation_result_factory import (
 def test_excel_report_is_created(
     tmp_path: Path,
 ) -> None:
-
     result = ReconciliationResult(
         matched=[
             movement(),
@@ -43,7 +41,6 @@ def test_excel_report_is_created(
 def test_excel_report_is_not_empty(
     tmp_path: Path,
 ) -> None:
-
     output = tmp_path / "report.xlsx"
 
     builder = ExcelReportBuilder()
@@ -59,7 +56,6 @@ def test_excel_report_is_not_empty(
 def test_consumption_difference_sheet_has_conditional_formatting(
     tmp_path: Path,
 ) -> None:
-
     difference = ConsumptionDifference(
         year=2026,
         month=1,
@@ -92,7 +88,6 @@ def test_consumption_difference_sheet_has_conditional_formatting(
 def test_amount_difference_sheet_is_created(
     tmp_path: Path,
 ) -> None:
-
     difference = AmountDifference(
         mkys=movement(amount=Decimal("100")),
         tdms=movement(amount=Decimal("120")),
@@ -121,7 +116,6 @@ def test_amount_difference_sheet_is_created(
 def test_worksheet_page_setup(
     tmp_path: Path,
 ) -> None:
-
     output = tmp_path / "report.xlsx"
 
     builder = ExcelReportBuilder()
@@ -143,23 +137,22 @@ def test_worksheet_page_setup(
 
     assert sheet.auto_filter.ref is not None
 
-    assert (
-        sheet.page_setup.orientation
-        == sheet.ORIENTATION_LANDSCAPE
-    )
+    assert sheet.page_setup.orientation == sheet.ORIENTATION_LANDSCAPE
 
     assert int(sheet.page_setup.paperSize) == 9
 
-    assert sheet.print_title_rows.replace(
-        "$",
-        "",
-    ) == "1:3"
+    assert (
+        sheet.print_title_rows.replace(
+            "$",
+            "",
+        )
+        == "1:3"
+    )
 
 
 def test_dashboard_sheet_exists(
     tmp_path: Path,
 ) -> None:
-
     output = tmp_path / "report.xlsx"
 
     builder = ExcelReportBuilder()
@@ -179,14 +172,10 @@ def test_dashboard_sheet_exists(
 
     worksheet = workbook["0_Dashboard"]
 
-    assert (
-        worksheet.page_setup.orientation
-        == worksheet.ORIENTATION_LANDSCAPE
-    )
+    assert worksheet.page_setup.orientation == worksheet.ORIENTATION_LANDSCAPE
 
     assert worksheet.page_setup.fitToWidth == 1
 
     assert worksheet.page_setup.fitToHeight == 1
 
     assert worksheet.print_area is not None
-    

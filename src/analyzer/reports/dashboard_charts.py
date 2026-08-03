@@ -1,27 +1,21 @@
 from __future__ import annotations
 
-from openpyxl.chart import PieChart, Reference
-from openpyxl.chart import LineChart, Reference
-from openpyxl.chart.axis import ChartLines
-from openpyxl.chart.label import DataLabelList
-from openpyxl.chart.series import DataPoint
-from openpyxl.chart.shapes import GraphicalProperties
-from openpyxl.worksheet.worksheet import Worksheet
-
-from analyzer.reports.dashboard_summary import DashboardSummary
-
 from openpyxl.chart import (
     BarChart,
     PieChart,
     Reference,
 )
+from openpyxl.chart.label import DataLabelList
+from openpyxl.chart.shapes import GraphicalProperties
+from openpyxl.worksheet.worksheet import Worksheet
 
-from .theme import (
-    CHART_WIDTH,
-    CHART_HEIGHT,
-    PIE_CHART_POSITION,
-    BAR_CHART_POSITION,
-)
+from analyzer.reports.dashboard_summary import DashboardSummary
+
+CHART_HEIGHT = 7
+CHART_WIDTH = 14
+
+PIE_CHART_POSITION = "M2"
+BAR_CHART_POSITION = "M20"
 
 
 class DashboardCharts:
@@ -35,14 +29,11 @@ class DashboardCharts:
         summary: DashboardSummary,
     ) -> None:
         """
-        Eşleşme durumunu gösteren pasta grafiği ekler.
+        Eşleşme durumunu gösteren pasta grafiğini oluşturur.
         """
 
-        #
-        # Grafik veri alanı
-        #
         worksheet["N1"] = "Durum"
-        worksheet["O1"] = "Adet"
+        worksheet["O1"] = "Kayıt"
 
         worksheet["N2"] = "Eşleşen"
         worksheet["O2"] = summary.matched_records
@@ -72,7 +63,6 @@ class DashboardCharts:
         chart.title = "Giriş Hareketleri"
 
         chart.height = CHART_HEIGHT
-
         chart.width = CHART_WIDTH
 
         chart.add_data(
@@ -84,54 +74,32 @@ class DashboardCharts:
             labels,
         )
 
-        chart.legend.position = "r"
-
-        chart.firstSliceAng = 45
-
-        #
-        # Dilimleri renklendirmeye hazır hale getir
-        #
-        for i in range(3):
-
-            point = DataPoint(idx=i)
-
-            chart.series[0].data_points.append(
-                point,
-            )
+        chart.dataLabels = DataLabelList()
+        chart.dataLabels.showPercent = True
 
         worksheet.add_chart(
             chart,
             PIE_CHART_POSITION,
         )
 
-
     @staticmethod
     def add_consumption_bar_chart(
-        worksheet: Worksheet,
-        summary: DashboardSummary,
+        dashboard_sheet: Worksheet,
+        analytics_sheet: Worksheet,
     ) -> None:
         """
         Tüketim ve tutar farklarını gösteren sütun grafiği ekler.
         """
 
-        worksheet["N7"] = "Kategori"
-        worksheet["O7"] = "Adet"
-
-        worksheet["N8"] = "Tutar Farkı"
-        worksheet["O8"] = summary.amount_difference_count
-
-        worksheet["N9"] = "Tüketim Farkı"
-        worksheet["O9"] = summary.consumption_difference_count
-
         labels = Reference(
-            worksheet,
+            analytics_sheet,
             min_col=14,
             min_row=8,
             max_row=9,
         )
 
         data = Reference(
-            worksheet,
+            analytics_sheet,
             min_col=15,
             min_row=7,
             max_row=9,
@@ -170,361 +138,7 @@ class DashboardCharts:
         # Grid çizgilerini kaldır
         chart.y_axis.majorGridlines = None
 
-        worksheet.add_chart(
+        dashboard_sheet.add_chart(
             chart,
             BAR_CHART_POSITION,
-        )
-
-
-    @staticmethod
-    def add_trend_chart(
-        worksheet: Worksheet,
-        summary: DashboardSummary,
-    ) -> None:
-        """
-        Aylık uzlaştırma oranı trend grafiğini oluşturur.
-        """
-
-        #
-        # Grafik verisi
-        #
-        worksheet["AA1"] = "Ay"
-        worksheet["AB1"] = "Uzlaştırma"
-
-        for row, month in enumerate(
-            summary.trend.months,
-            start=2,
-        ):
-
-            worksheet.cell(
-                row=row,
-                column=27,
-            ).value = month.label
-
-            worksheet.cell(
-                row=row,
-                column=28,
-            ).value = month.match_rate
-
-        #
-        # Grafik
-        #
-        chart = LineChart()
-
-        chart.title = "Aylık Uzlaştırma Oranı"
-
-        chart.style = 10
-
-        chart.height = 7
-
-        chart.width = 14
-
-        chart.y_axis.title = "%"
-
-        chart.x_axis.title = "Ay"
-
-        chart.legend = None
-
-        chart.y_axis.majorGridlines = ChartLines()
-
-        #
-        # Veri
-        #
-        data = Reference(
-            worksheet,
-            min_col=28,
-            min_row=1,
-            max_row=len(summary.trend.months) + 1,
-        )
-
-        categories = Reference(
-            worksheet,
-            min_col=27,
-            min_row=2,
-            max_row=len(summary.trend.months) + 1,
-        )
-
-        chart.add_data(
-            data,
-            titles_from_data=True,
-        )
-
-        chart.set_categories(
-            categories,
-        )        
-
-        #
-        # Y ekseni
-        #
-        chart.y_axis.scaling.min = 0
-
-        chart.y_axis.scaling.max = 100
-
-        #
-        # Dashboard konumu
-        #
-        worksheet.add_chart(
-            chart,
-            "M20",
-        )
-
-    @staticmethod
-    def add_supplier_chart(
-        worksheet: Worksheet,
-        summary: DashboardSummary,
-    ) -> None:
-        """
-        En çok hareket bulunan tedarikçileri gösteren grafik.
-        """
-
-        #
-        # Grafik verisi
-        #
-        worksheet["AA20"] = "Tedarikçi"
-        worksheet["AB20"] = "Kayıt"
-
-        for row, supplier in enumerate(
-            summary.suppliers[:10],
-            start=21,
-        ):
-
-            worksheet.cell(
-                row=row,
-                column=27,
-            ).value = supplier.supplier
-
-            worksheet.cell(
-                row=row,
-                column=28,
-            ).value = supplier.total_records
-
-        #
-        # Grafik
-        #
-        chart = BarChart()
-
-        chart.type = "bar"
-
-        chart.style = 10
-
-        chart.title = "En Aktif Tedarikçiler"
-
-        chart.height = CHART_HEIGHT
-
-        chart.width = CHART_WIDTH
-
-        chart.y_axis.title = "Tedarikçi"
-
-        chart.x_axis.title = "Kayıt"
-
-        chart.legend = None
-
-        data = Reference(
-            worksheet,
-            min_col=28,
-            min_row=20,
-            max_row=min(
-                20 + len(summary.suppliers),
-                30,
-            ),
-        )   
-
-        categories = Reference(
-            worksheet,
-            min_col=27,
-            min_row=21,
-            max_row=min(
-                20 + len(summary.suppliers),
-                30,
-            ),
-        )
-
-        chart.add_data(
-            data,
-            titles_from_data=True,
-        )
-
-        chart.set_categories(
-            categories,
-        )
-
-        chart.series[0].graphicalProperties = (
-            GraphicalProperties(
-                solidFill="4472C4",
-            )
-        )
-
-        chart.dataLabels = DataLabelList()
-        chart.dataLabels.showVal = True
-
-        worksheet.add_chart(
-            chart,
-            "M38",
-        )
-
-    @staticmethod
-    def add_warehouse_chart(
-        worksheet: Worksheet,
-        summary: DashboardSummary,
-    ) -> None:
-        """
-        Ambar bazlı kayıt dağılımı grafiğini oluşturur.
-        """
-
-        #
-        # Grafik verisi
-        #
-        worksheet["AA20"] = "Ambar"
-        worksheet["AB20"] = "Kayıt"
-
-        for row, warehouse in enumerate(
-            summary.warehouses,
-            start=21,
-        ):
-
-            worksheet.cell(
-                row=row,
-                column=27,
-            ).value = warehouse.warehouse
-
-            worksheet.cell(
-                row=row,
-                column=28,
-            ).value = warehouse.total_records
-
-        chart = BarChart()
-
-        chart.type = "bar"
-
-        chart.style = 10
-
-        chart.title = "Ambar Bazlı Kayıt Dağılımı"
-
-        chart.height = CHART_HEIGHT
-
-        chart.width = CHART_WIDTH
-
-        chart.legend = None
-
-        chart.y_axis.title = "Ambar"
-
-        chart.x_axis.title = "Kayıt"
-
-        data = Reference(
-            worksheet,
-            min_col=28,
-            min_row=20,
-            max_row=20 + len(summary.warehouses),
-        )
-
-        categories = Reference(
-            worksheet,
-            min_col=27,
-            min_row=21,
-            max_row=20 + len(summary.warehouses),
-        )
-
-        chart.add_data(
-            data,
-            titles_from_data=True,
-        )
-
-        chart.set_categories(
-            categories,
-        )
-
-        chart.series[0].graphicalProperties = GraphicalProperties(
-            solidFill="4472C4",
-        )
-
-        chart.dataLabels = DataLabelList()
-        chart.dataLabels.showVal = True
-
-        worksheet.add_chart(
-            chart,
-            "M38",
-        )
-
-    @staticmethod
-    def add_top_difference_chart(
-        worksheet: Worksheet,
-        summary: DashboardSummary,
-    ) -> None:
-        """
-        En büyük tutar farklarını gösteren grafik.
-        """
-
-        #
-        # Grafik verisi
-        #
-        worksheet["AA40"] = "Stok"
-
-        worksheet["AB40"] = "Fark"
-
-        for row, item in enumerate(
-            summary.top_differences,
-            start=41,
-        ):
-
-            worksheet.cell(
-                row=row,
-                column=27,
-            ).value = item.stock_name
-
-            worksheet.cell(
-                row=row,
-                column=28,
-            ).value = float(item.difference)
-
-        chart = BarChart()
-
-        chart.type = "bar"
-
-        chart.style = 10
-
-        chart.title = "En Büyük Tutar Farkları"
-
-        chart.height = CHART_HEIGHT
-
-        chart.width = CHART_WIDTH
-
-        chart.legend = None
-
-        chart.y_axis.title = "Stok"
-
-        chart.x_axis.title = "Tutar"
-
-        data = Reference(
-            worksheet,
-            min_col=28,
-            min_row=40,
-            max_row=40 + len(summary.top_differences),
-        )
-
-        categories = Reference(
-            worksheet,
-            min_col=27,
-            min_row=41,
-            max_row=40 + len(summary.top_differences),
-        )
-
-        chart.add_data(
-            data,
-            titles_from_data=True,
-        )
-
-        chart.set_categories(
-            categories,
-        )
-
-        chart.series[0].graphicalProperties = GraphicalProperties(
-            solidFill="C0504D",
-        )
-
-        chart.dataLabels = DataLabelList()
-        chart.dataLabels.showVal = True
-
-        worksheet.add_chart(
-            chart,
-            "M56",
         )

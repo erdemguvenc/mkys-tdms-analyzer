@@ -33,7 +33,6 @@ class OpeningMatcher:
         list[Movement],
         list[Movement],
     ]:
-
         mkys_openings = self._mkys_openings(
             mkys,
         )
@@ -51,14 +50,12 @@ class OpeningMatcher:
         remaining_tdms = tdms_openings.copy()
 
         for mkys_movement in mkys_openings:
-
             tdms_match = self._find_match(
                 mkys_movement,
                 remaining_tdms,
             )
 
             if tdms_match is None:
-
                 missing_in_tdms.append(
                     mkys_movement,
                 )
@@ -87,20 +84,19 @@ class OpeningMatcher:
         self,
         movements: list[Movement],
     ) -> list[Movement]:
-
         return [
             movement
             for movement in movements
             if str(
                 movement.tif_no,
-            ).strip() == "0"
+            ).strip()
+            == "0"
         ]
 
     def _tdms_openings(
         self,
         movements: list[Movement],
     ) -> list[Movement]:
-
         return [
             movement
             for movement in movements
@@ -115,9 +111,7 @@ class OpeningMatcher:
         mkys: Movement,
         tdms_movements: list[Movement],
     ) -> Movement | None:
-
         for tdms in tdms_movements:
-
             if (
                 tdms.amount == mkys.amount
                 and tdms.movement_date.year == mkys.movement_date.year

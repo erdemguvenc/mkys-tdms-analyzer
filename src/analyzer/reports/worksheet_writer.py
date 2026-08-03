@@ -2,26 +2,28 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import cast
 
 from openpyxl.cell import Cell
 from openpyxl.worksheet.worksheet import Worksheet
 
+from analyzer.models.movement import Movement
 from analyzer.reconciliation.difference import (
     AmountDifference,
     ConsumptionDifference,
 )
-from analyzer.models.movement import Movement
 from analyzer.reports.styles import (
     apply_currency,
     apply_date,
     apply_decimal,
+    apply_difference_rules,
     apply_header,
     apply_integer,
     apply_text,
     apply_title,
     format_worksheet,
 )
-from analyzer.reports.styles import apply_difference_rules
+
 from .page_setup import prepare_worksheet
 
 
@@ -57,18 +59,13 @@ class WorksheetWriter:
         headers: list[str],
         row: int = 3,
     ) -> None:
-        """
-        Tablo başlıklarını yazar.
-        """
-
-        for column, header in enumerate(
-            headers,
-            start=1,
-        ):
-
-            cell = worksheet.cell(
-                row=row,
-                column=column,
+        for column, header in enumerate(headers, start=1):
+            cell = cast(
+                Cell,
+                worksheet.cell(
+                    row=row,
+                    column=column,
+                ),
             )
 
             cell.value = header
@@ -104,50 +101,32 @@ class WorksheetWriter:
         Hücreyi veri tipine göre yazar ve biçimlendirir.
         """
 
-        cell.value = value
-
         if value is None:
-
+            cell.value = None
             apply_text(cell)
-
             return
 
-        if isinstance(
-            value,
-            date,
-        ):
-
+        if isinstance(value, date):
+            cell.value = value
             apply_date(cell)
-
             return
 
-        if isinstance(
-            value,
-            Decimal,
-        ):
-
+        if isinstance(value, Decimal):
+            cell.value = value
             apply_decimal(cell)
-
             return
 
-        if isinstance(
-            value,
-            int,
-        ):
-
+        if isinstance(value, int):
+            cell.value = value
             apply_integer(cell)
-
             return
 
-        if isinstance(
-            value,
-            float,
-        ):
-
+        if isinstance(value, float):
+            cell.value = value
             apply_currency(cell)
-
             return
 
+        cell.value = str(value)
         apply_text(cell)
 
     def _write_table(
@@ -168,15 +147,21 @@ class WorksheetWriter:
         current_row = 4
 
         for row in rows:
-
             for column, value in enumerate(
                 row,
                 start=1,
             ):
-
                 cell = worksheet.cell(
                     row=current_row,
                     column=column,
+                )
+
+                cell = cast(
+                    Cell,
+                    worksheet.cell(
+                        row=current_row,
+                        column=column,
+                    ),
                 )
 
                 self._write_cell(
@@ -190,72 +175,12 @@ class WorksheetWriter:
             worksheet,
         )
 
-            #
+        #
+
     # ------------------------------------------------------------------
     # Public metodlar
     # ------------------------------------------------------------------
     #
-
-    def write_summary(
-        self,
-        worksheet: Worksheet,
-        result,
-    ) -> None:
-        """
-        Uzlaştırma özet sayfasını oluşturur.
-        """
-
-        self._write_title(
-            worksheet,
-            "MKYS - TDMS Uzlaştırma Özeti",
-        )
-
-        headers = [
-            "Kategori",
-            "Adet",
-        ]
-
-        rows = [
-            [
-                "Eşleşen Giriş Hareketleri",
-                len(result.matched),
-            ],
-            [
-                "TDMS'de Bulunmayan Girişler",
-                len(result.missing_in_tdms),
-            ],
-            [
-                "MKYS'de Bulunmayan Girişler",
-                len(result.missing_in_mkys),
-            ],
-            [
-                "Tutar Farkları",
-                len(result.amount_differences),
-            ],
-            [
-                "Tüketim Farkları",
-                len(result.consumption_differences),
-            ],
-            [
-                "Açılış Eşleşmeleri",
-                len(result.opening_matched),
-            ],
-            [
-                "TDMS'de Bulunmayan Açılışlar",
-                len(result.opening_missing_in_tdms),
-            ],
-            [
-                "MKYS'de Bulunmayan Açılışlar",
-                len(result.opening_missing_in_mkys),
-            ],
-        ]
-
-        self._write_table(
-            worksheet,
-            headers,
-            rows,
-        )
-        prepare_worksheet(worksheet)
 
     def write_movements(
         self,
@@ -287,7 +212,6 @@ class WorksheetWriter:
         rows: list[list[object]] = []
 
         for movement in movements:
-
             rows.append(
                 self._movement_row(
                     movement,
@@ -301,7 +225,6 @@ class WorksheetWriter:
         )
 
         prepare_worksheet(worksheet)
-
 
     def write_amount_differences(
         self,
@@ -327,13 +250,12 @@ class WorksheetWriter:
         rows: list[list[object]] = []
 
         for difference in differences:
-
             rows.append(
                 [
                     difference.mkys.tif_no,
                     difference.mkys.amount,
                     difference.tdms.amount,
-                    difference.difference
+                    difference.difference,
                 ]
             )
 
@@ -379,7 +301,6 @@ class WorksheetWriter:
         rows: list[list[object]] = []
 
         for difference in differences:
-
             rows.append(
                 [
                     difference.year,

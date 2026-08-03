@@ -35,7 +35,6 @@ class EntryMatcher:
         list[Movement],
         list[AmountDifference],
     ]:
-
         lookup = self._build_lookup(tdms)
 
         matched: list[Movement] = []
@@ -43,7 +42,6 @@ class EntryMatcher:
         amount_differences: list[AmountDifference] = []
 
         for mkys_item in mkys:
-
             if mkys_item.movement_type != MovementType.ENTRY:
                 continue
 
@@ -55,7 +53,6 @@ class EntryMatcher:
             candidates = lookup.get(key)
 
             if not candidates:
-
                 missing_tdms.append(mkys_item)
                 continue
 
@@ -65,11 +62,9 @@ class EntryMatcher:
                 lookup.pop(key)
 
             if mkys_item.amount == tdms_item.amount:
-
                 matched.append(mkys_item)
 
             else:
-
                 amount_differences.append(
                     AmountDifference(
                         mkys=mkys_item,
@@ -109,7 +104,6 @@ class EntryMatcher:
         ] = defaultdict(list)
 
         for movement in movements:
-
             if movement.movement_type != MovementType.ENTRY:
                 continue
 

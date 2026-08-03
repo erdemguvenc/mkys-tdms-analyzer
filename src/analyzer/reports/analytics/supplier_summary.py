@@ -35,14 +35,9 @@ class SupplierSummary:
         """
 
         if self.total_records == 0:
-
             return 0.0
 
-        return (
-            self.matched_records
-            / self.total_records
-            * 100
-        )
+        return self.matched_records / self.total_records * 100
 
     @classmethod
     def from_result(
@@ -59,7 +54,6 @@ class SupplierSummary:
         # Eşleşen kayıtlar
         #
         for movement in result.matched:
-
             summary = cls._get_or_create_summary(
                 grouped,
                 movement.supplier,
@@ -73,7 +67,6 @@ class SupplierSummary:
         # MKYS'de eksik kayıtlar
         #
         for movement in result.missing_in_mkys:
-
             summary = cls._get_or_create_summary(
                 grouped,
                 movement.supplier,
@@ -87,7 +80,6 @@ class SupplierSummary:
         # TDMS'de eksik kayıtlar
         #
         for movement in result.missing_in_tdms:
-
             summary = cls._get_or_create_summary(
                 grouped,
                 movement.supplier,
@@ -101,7 +93,6 @@ class SupplierSummary:
         # Tutar farklılıkları
         #
         for difference in result.amount_differences:
-
             summary = cls._get_or_create_summary(
                 grouped,
                 difference.mkys.supplier,
@@ -132,7 +123,6 @@ class SupplierSummary:
         supplier = supplier or "Bilinmeyen"
 
         if supplier not in grouped:
-
             grouped[supplier] = cls(
                 supplier=supplier,
                 total_records=0,

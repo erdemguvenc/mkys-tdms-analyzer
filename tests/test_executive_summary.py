@@ -5,7 +5,6 @@ from .helpers.dashboard_summary_factory import dashboard_summary
 
 
 def test_executive_summary_good_status() -> None:
-
     summary = dashboard_summary(
         total_records=100,
         matched_records=100,
@@ -27,7 +26,6 @@ def test_executive_summary_good_status() -> None:
 
 
 def test_executive_summary_warning_status() -> None:
-
     summary = dashboard_summary(
         total_records=10,
         matched_records=9,
@@ -45,7 +43,6 @@ def test_executive_summary_warning_status() -> None:
 
 
 def test_executive_summary_critical_status() -> None:
-
     summary = dashboard_summary(
         total_records=10,
         matched_records=5,

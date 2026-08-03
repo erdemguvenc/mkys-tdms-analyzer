@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from analyzer.reports.report_status import ReportStatus
+from decimal import Decimal
+from typing import cast
 
 from openpyxl.cell import Cell
+from openpyxl.formatting.rule import CellIsRule
 from openpyxl.styles import (
     Alignment,
     Border,
@@ -11,30 +13,29 @@ from openpyxl.styles import (
     Side,
 )
 from openpyxl.worksheet.worksheet import Worksheet
-from openpyxl.formatting.rule import CellIsRule
-from decimal import Decimal
+
+from analyzer.reports.report_status import ReportStatus
 
 from .theme import (
+    THEME_BACKGROUND,
+    THEME_BORDER,
+    THEME_CARD,
+    THEME_CRITICAL,
+    THEME_DIFF_GREEN,
+    THEME_DIFF_RED,
+    THEME_DIFF_YELLOW,
+    THEME_HEADER,
+    THEME_NEGATIVE,
+    THEME_POSITIVE,
     THEME_PRIMARY,
     THEME_SUCCESS,
-    THEME_WARNING,
-    THEME_CRITICAL,    
-    THEME_CARD,    
-    THEME_SUCCESS,    
-    THEME_BORDER,
-    THEME_WHITE,
-    THEME_TEXT_DARK,
-    THEME_TEXT,
     THEME_SUMMARY,
-    THEME_NEGATIVE,
+    THEME_TEXT,
+    THEME_TEXT_DARK,
     THEME_TEXT_LIGHT,
-    THEME_BACKGROUND,
-    THEME_HEADER,
-    THEME_POSITIVE,
     THEME_TITLE,
-    THEME_DIFF_GREEN,
-    THEME_DIFF_YELLOW,
-    THEME_DIFF_RED,
+    THEME_WARNING,
+    THEME_WHITE,
 )
 
 #
@@ -142,11 +143,11 @@ RIGHT_ALIGNMENT = Alignment(
 # Number formats
 #
 
-AMOUNT_FORMAT = '#,##0.00'
+AMOUNT_FORMAT = "#,##0.00"
 
-INTEGER_FORMAT = '#,##0'
+INTEGER_FORMAT = "#,##0"
 
-DATE_FORMAT = 'DD.MM.YYYY'
+DATE_FORMAT = "DD.MM.YYYY"
 
 #
 # Difference fills
@@ -284,13 +285,12 @@ def format_worksheet(
     worksheet.auto_filter.ref = worksheet.dimensions
 
     for column_cells in worksheet.columns:
-
         length = 0
 
-        column_letter = column_cells[0].column_letter
+        first_cell = cast(Cell, column_cells[0])
+        column_letter = first_cell.column_letter
 
         for cell in column_cells:
-
             if cell.value is None:
                 continue
 
@@ -299,16 +299,14 @@ def format_worksheet(
                 len(str(cell.value)),
             )
 
-        worksheet.column_dimensions[
-            column_letter
-        ].width = min(
+        worksheet.column_dimensions[column_letter].width = min(
             max(length + 2, 12),
             50,
         )
 
 
 def apply_difference_rules(
-    worksheet,
+    worksheet: Worksheet,
     first_row: int,
     last_row: int,
     column: int,
@@ -328,10 +326,7 @@ def apply_difference_rules(
 
     column_letter = get_column_letter(column)
 
-    cell_range = (
-        f"{column_letter}{first_row}:"
-        f"{column_letter}{last_row}"
-    )
+    cell_range = f"{column_letter}{first_row}:{column_letter}{last_row}"
 
     worksheet.conditional_formatting.add(
         cell_range,
@@ -370,9 +365,7 @@ def apply_zebra_rows(
     Alternatif satır renklendirmesi uygular.
     """
     for row in range(first_row, last_row + 1):
-
         if row % 2 == 0:
-
             for cell in worksheet[row]:
                 cell.fill = ZEBRA_FILL
 
@@ -384,9 +377,7 @@ def apply_number_format(
     columns: list[int],
 ) -> None:
     for row in range(first_row, last_row + 1):
-
         for column in columns:
-
             cell = worksheet.cell(
                 row=row,
                 column=column,
@@ -402,7 +393,6 @@ def apply_negative_font(
     column: int,
 ) -> None:
     for row in range(first_row, last_row + 1):
-
         cell = worksheet.cell(
             row=row,
             column=column,
@@ -472,12 +462,10 @@ def apply_kpi_card(
     )
 
     for row in range(first_row, last_row + 1):
-
         for column in range(
             first_column,
             last_column + 1,
         ):
-
             cell = worksheet.cell(
                 row=row,
                 column=column,
@@ -522,9 +510,7 @@ def apply_summary_box(
     """
 
     for row in range(first_row, last_row + 1):
-
         for column in range(first_column, last_column + 1):
-
             cell = worksheet.cell(
                 row=row,
                 column=column,
@@ -621,5 +607,4 @@ def apply_summary_critical(
 def apply_status_badge(
     cell: Cell,
     status: ReportStatus,
-) -> None:
-    ...
+) -> None: ...

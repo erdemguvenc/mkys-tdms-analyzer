@@ -23,7 +23,6 @@ def movement(
 
 
 def test_same_month_same_total() -> None:
-
     mkys = [
         movement(date(2026, 1, 5), "100"),
         movement(date(2026, 1, 10), "200"),
@@ -45,7 +44,6 @@ def test_same_month_same_total() -> None:
 
 
 def test_same_month_different_total() -> None:
-
     mkys = [
         movement(date(2026, 1, 5), "100"),
         movement(date(2026, 1, 10), "200"),
@@ -75,7 +73,6 @@ def test_same_month_different_total() -> None:
 
 
 def test_two_months() -> None:
-
     mkys = [
         movement(date(2026, 1, 5), "100"),
         movement(date(2026, 2, 5), "300"),
@@ -103,7 +100,6 @@ def test_two_months() -> None:
 
 
 def test_month_exists_only_in_mkys() -> None:
-
     mkys = [
         movement(date(2026, 3, 5), "400"),
     ]
@@ -129,7 +125,6 @@ def test_month_exists_only_in_mkys() -> None:
 
 
 def test_month_exists_only_in_tdms() -> None:
-
     mkys = []
 
     tdms = [
@@ -155,7 +150,6 @@ def test_month_exists_only_in_tdms() -> None:
 
 
 def test_multiple_movements_grouped_correctly() -> None:
-
     mkys = [
         movement(date(2026, 5, 1), "100"),
         movement(date(2026, 5, 2), "150"),

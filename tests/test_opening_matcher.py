@@ -15,7 +15,6 @@ def create_movement(
     amount: str,
     description: str = "",
 ) -> Movement:
-
     return Movement(
         source=source,
         movement_type=MovementType.ENTRY,
@@ -36,7 +35,6 @@ def create_movement(
 
 
 def test_opening_match_is_found() -> None:
-
     matcher = OpeningMatcher()
 
     mkys = [
@@ -67,7 +65,6 @@ def test_opening_match_is_found() -> None:
 
 
 def test_missing_in_tdms() -> None:
-
     matcher = OpeningMatcher()
 
     mkys = [
@@ -91,7 +88,6 @@ def test_missing_in_tdms() -> None:
 
 
 def test_missing_in_mkys() -> None:
-
     matcher = OpeningMatcher()
 
     mkys: list[Movement] = []
@@ -116,7 +112,6 @@ def test_missing_in_mkys() -> None:
 
 
 def test_amount_difference_is_not_matched() -> None:
-
     matcher = OpeningMatcher()
 
     mkys = [
@@ -147,7 +142,6 @@ def test_amount_difference_is_not_matched() -> None:
 
 
 def test_non_opening_records_are_ignored() -> None:
-
     matcher = OpeningMatcher()
 
     mkys = [
@@ -178,7 +172,6 @@ def test_non_opening_records_are_ignored() -> None:
 
 
 def test_multiple_openings_are_matched() -> None:
-
     matcher = OpeningMatcher()
 
     mkys = [

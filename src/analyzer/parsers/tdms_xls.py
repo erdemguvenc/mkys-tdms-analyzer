@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
@@ -7,8 +8,7 @@ import pandas as pd
 from analyzer.constants import tdms_columns as COL
 from analyzer.models.movement import Movement
 from analyzer.models.movement_type import MovementType
-from analyzer.utils import parse_date
-from analyzer.utils import parse_decimal
+from analyzer.utils import parse_date, parse_decimal
 
 
 class TDMSXlsParser:
@@ -30,7 +30,6 @@ class TDMSXlsParser:
         self,
         file_path: Path,
     ) -> list[Movement]:
-
         df = self._read_xls(file_path)
 
         self._validate_columns(df)
@@ -43,7 +42,6 @@ class TDMSXlsParser:
         self,
         file_path: Path,
     ) -> pd.DataFrame:
-
         df = pd.read_excel(
             file_path,
             engine="xlrd",
@@ -52,16 +50,9 @@ class TDMSXlsParser:
 
         header_row = self._find_header_row(df)
 
-        df.columns = (
-            df.iloc[header_row]
-            .astype(str)
-            .str.strip()
-        )
+        df.columns = df.iloc[header_row].astype(str).str.strip()
 
-        df = (
-            df.iloc[header_row + 1 :]
-            .reset_index(drop=True)
-        )
+        df = df.iloc[header_row + 1 :].reset_index(drop=True)
 
         return self._cleanup_dataframe(df)
 
@@ -76,12 +67,7 @@ class TDMSXlsParser:
         """
 
         for index in range(len(df)):
-
-            row = (
-                df.iloc[index]
-                .astype(str)
-                .str.strip()
-            )
+            row = df.iloc[index].astype(str).str.strip()
 
             if (
                 COL.DATE in row.values
@@ -90,10 +76,7 @@ class TDMSXlsParser:
             ):
                 return index
 
-        raise ValueError(
-            "TDMS başlık satırı bulunamadı."
-        )
-    
+        raise ValueError("TDMS başlık satırı bulunamadı.")
 
         # ---------------------------------------------------------
 
@@ -115,15 +98,12 @@ class TDMSXlsParser:
 
         # Sütun adlarını temizle
         df.columns = (
-            df.columns.astype(str)
-            .str.replace("\ufeff", "", regex=False)
-            .str.strip()
+            df.columns.astype(str).str.replace("\ufeff", "", regex=False).str.strip()
         )
 
         cleaned_rows = []
 
         for _, row in df.iterrows():
-
             date_value = row.get(COL.DATE)
 
             if pd.isna(date_value):
@@ -167,16 +147,11 @@ class TDMSXlsParser:
         """
 
         missing = [
-            column
-            for column in COL.REQUIRED_COLUMNS
-            if column not in df.columns
+            column for column in COL.REQUIRED_COLUMNS if column not in df.columns
         ]
 
         if missing:
-            raise ValueError(
-                "Eksik TDMS sütunları: "
-                + ", ".join(missing)
-            )
+            raise ValueError("Eksik TDMS sütunları: " + ", ".join(missing))
 
     # ---------------------------------------------------------
 
@@ -188,11 +163,7 @@ class TDMSXlsParser:
         DataFrame'i Movement listesine dönüştürür.
         """
 
-        return [
-            self._row_to_movement(row)
-            for _, row in df.iterrows()
-        ]
-    
+        return [self._row_to_movement(row) for _, row in df.iterrows()]
 
         # ---------------------------------------------------------
 
@@ -214,44 +185,29 @@ class TDMSXlsParser:
             COL.CREDIT,
         )
 
-        amount = (
-            debit
-            if debit > 0
-            else credit
-        )
+        amount = debit if debit > 0 else credit
 
         return Movement(
-
             source="TDMS",
-
             movement_type=MovementType.ENTRY,
-
-            movement_date=parse_date(
-                row[COL.DATE]
-            ),
-
+            movement_date=parse_date(row[COL.DATE]),
             tif_no=self._optional_str(
                 row,
                 COL.TIF_NO,
             ),
-
             voucher_no=self._optional_str(
                 row,
                 COL.VOUCHER_NO,
             ),
-
             invoice_no=self._optional_str(
                 row,
                 COL.INVOICE_NO,
             ),
-
             amount=amount,
-
             description=self._optional_str(
                 row,
                 COL.DESCRIPTION,
             ),
-
             supplier=self._optional_str(
                 row,
                 COL.SUPPLIER,
@@ -285,7 +241,7 @@ class TDMSXlsParser:
         self,
         row: pd.Series,
         column: str,
-    ):
+    ) -> Decimal:
         """
         Opsiyonel sayısal alanı güvenli şekilde döndürür.
         """
@@ -293,6 +249,4 @@ class TDMSXlsParser:
         if column not in row.index:
             return parse_decimal(0)
 
-        return parse_decimal(
-            row[column]
-        )
+        return parse_decimal(row[column])

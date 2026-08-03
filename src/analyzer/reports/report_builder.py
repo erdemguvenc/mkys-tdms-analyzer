@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from pathlib import Path
 
 from analyzer.reconciliation.result import ReconciliationResult

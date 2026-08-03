@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Any, cast
 
 import pandas as pd
-
 
 _MONTHS = {
     "OCA": "01",
@@ -39,7 +39,7 @@ def parse_date(value: object) -> date:
     - 27-AĞU-2026
     """
 
-    if pd.isna(value):
+    if pd.isna(cast(Any, value)):
         raise ValueError("Tarih boş.")
 
     text = str(value).strip()
@@ -65,7 +65,7 @@ def parse_date(value: object) -> date:
     if len(parts) == 3:
         day, month, year = parts
 
-        month = _MONTHS.get(month)
+        month = _MONTHS.get(month, month)
 
         if month is not None:
             return datetime.strptime(
@@ -73,6 +73,4 @@ def parse_date(value: object) -> date:
                 "%d.%m.%Y",
             ).date()
 
-    raise ValueError(
-        f"Desteklenmeyen tarih formatı: {text}"
-    )
+    raise ValueError(f"Desteklenmeyen tarih formatı: {text}")

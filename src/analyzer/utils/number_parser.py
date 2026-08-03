@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from decimal import Decimal
-from decimal import InvalidOperation
+from decimal import Decimal, InvalidOperation
+from typing import Any, cast
 
 import pandas as pd
 
@@ -22,7 +22,7 @@ def parse_decimal(value: object) -> Decimal:
     ""
     """
 
-    if pd.isna(value):
+    if pd.isna(cast(Any, value)):
         return Decimal("0")
 
     text = str(value).strip()
@@ -49,6 +49,4 @@ def parse_decimal(value: object) -> Decimal:
         return Decimal(text)
 
     except InvalidOperation:
-        raise ValueError(
-            f"Geçersiz sayısal değer: {value}"
-        )
+        raise ValueError(f"Geçersiz sayısal değer: {value}")

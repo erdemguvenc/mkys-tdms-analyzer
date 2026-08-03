@@ -30,7 +30,6 @@ class TrendSummary:
         # Eşleşen kayıtlar
         #
         for movement in result.matched:
-
             month = movement.movement_date.strftime("%Y-%m")
 
             summary = cls._get_or_create_summary(
@@ -45,7 +44,6 @@ class TrendSummary:
         # TDMS'de eksik
         #
         for movement in result.missing_in_tdms:
-
             month = movement.movement_date.strftime("%Y-%m")
 
             summary = cls._get_or_create_summary(
@@ -60,7 +58,6 @@ class TrendSummary:
         # MKYS'de eksik
         #
         for movement in result.missing_in_mkys:
-
             month = movement.movement_date.strftime("%Y-%m")
 
             summary = cls._get_or_create_summary(
@@ -74,11 +71,8 @@ class TrendSummary:
         #
         # Tutar farkları
         #
-        for difference in result.amount_differences:
-
-            month = difference.mkys.movement_date.strftime(
-                "%Y-%m"
-            )
+        for amount_difference in result.amount_differences:
+            month = amount_difference.mkys.movement_date.strftime("%Y-%m")
 
             summary = cls._get_or_create_summary(
                 grouped,
@@ -90,11 +84,9 @@ class TrendSummary:
         #
         # Tüketim farkları
         #
-        for difference in result.consumption_differences:
-
+        for consumption_difference in result.consumption_differences:
             month = (
-                f"{difference.year:04d}-"
-                f"{difference.month:02d}"
+                f"{consumption_difference.year:04d}-{consumption_difference.month:02d}"
             )
 
             summary = cls._get_or_create_summary(
@@ -105,10 +97,7 @@ class TrendSummary:
             summary.consumption_difference_count += 1
 
         return cls(
-            months=[
-                grouped[key]
-                for key in sorted(grouped)
-            ],
+            months=[grouped[key] for key in sorted(grouped)],
         )
 
     @classmethod
@@ -123,7 +112,6 @@ class TrendSummary:
         """
 
         if month not in grouped:
-
             grouped[month] = MonthlySummary(
                 month=month,
                 total_records=0,

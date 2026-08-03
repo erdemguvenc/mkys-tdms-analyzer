@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from openpyxl.styles import Font
-from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl.worksheet.page import PageMargins
-
+from openpyxl.worksheet.properties import PageSetupProperties
+from openpyxl.worksheet.worksheet import Worksheet
 
 DEFAULT_FREEZE_PANES = "A4"
 
@@ -48,6 +47,7 @@ def prepare_worksheet(
         footer=0.2,
     )
 
+
 def apply_freeze_panes(
     worksheet: Worksheet,
 ) -> None:
@@ -65,10 +65,7 @@ def apply_auto_filter(
     Yazılmış tablo üzerinde otomatik filtreyi etkinleştirir.
     """
 
-    if (
-        worksheet.max_row >= 3
-        and worksheet.max_column >= 1
-    ):
+    if worksheet.max_row >= 3 and worksheet.max_column >= 1:
         worksheet.auto_filter.ref = worksheet.dimensions
 
 
@@ -87,7 +84,6 @@ def apply_page_layout(
 def apply_print_settings(
     worksheet: Worksheet,
 ) -> None:
-
     worksheet.page_margins = PageMargins(
         left=0.5,
         right=0.5,
@@ -100,7 +96,13 @@ def apply_print_settings(
     worksheet.page_setup.fitToWidth = 1
     worksheet.page_setup.fitToHeight = 0
 
+    if worksheet.sheet_properties.pageSetUpPr is None:
+        worksheet.sheet_properties.pageSetUpPr = PageSetupProperties()
+
     worksheet.sheet_properties.pageSetUpPr.fitToPage = True
+
+    if worksheet.sheet_properties.pageSetUpPr is None:
+        worksheet.sheet_properties.pageSetUpPr = PageSetupProperties()
 
     worksheet.print_title_rows = "1:3"
 
@@ -122,7 +124,15 @@ def apply_header_footer(
     Sayfa üst ve alt bilgilerini ayarlar.
     """
 
-    worksheet.oddHeader.center.text = title
-    worksheet.oddHeader.center.font = "Calibri,Bold"
+    header = worksheet.oddHeader
 
-    worksheet.oddFooter.right.text = "Sayfa &[Page]/&N"
+    if header is not None:
+        if header.center is not None:
+            header.center.text = title
+            header.center.font = "Calibri,Bold"
+
+    footer = worksheet.oddFooter
+
+    if footer is not None:
+        if footer.right is not None:
+            footer.right.text = "Sayfa &[Page]/&N"

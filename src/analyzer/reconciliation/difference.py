@@ -17,10 +17,7 @@ class AmountDifference:
 
     @property
     def difference(self) -> Decimal:
-        return (
-            self.mkys.amount
-            - self.tdms.amount
-        )
+        return self.mkys.amount - self.tdms.amount
 
 
 @dataclass(slots=True)
@@ -39,7 +36,4 @@ class ConsumptionDifference:
 
     @property
     def difference(self) -> Decimal:
-        return (
-            self.mkys_amount
-            - self.tdms_amount
-        )
+        return self.mkys_amount - self.tdms_amount

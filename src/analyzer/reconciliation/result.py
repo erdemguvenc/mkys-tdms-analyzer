@@ -4,8 +4,7 @@ from dataclasses import dataclass, field
 
 from analyzer.models.movement import Movement
 
-from .difference import AmountDifference
-from .difference import ConsumptionDifference
+from .difference import AmountDifference, ConsumptionDifference
 
 
 @dataclass(slots=True)
@@ -52,32 +51,22 @@ class ReconciliationResult:
         default_factory=list,
     )
 
-    amount_differences: list[
-        AmountDifference
-    ] = field(
+    amount_differences: list[AmountDifference] = field(
         default_factory=list,
     )
 
-    consumption_differences: list[
-        ConsumptionDifference
-    ] = field(
+    consumption_differences: list[ConsumptionDifference] = field(
         default_factory=list,
     )
 
-    opening_matched: list[
-        Movement
-    ] = field(
+    opening_matched: list[Movement] = field(
         default_factory=list,
     )
 
-    opening_missing_in_tdms: list[
-        Movement
-    ] = field(
+    opening_missing_in_tdms: list[Movement] = field(
         default_factory=list,
     )
 
-    opening_missing_in_mkys: list[
-        Movement
-    ] = field(
+    opening_missing_in_mkys: list[Movement] = field(
         default_factory=list,
     )

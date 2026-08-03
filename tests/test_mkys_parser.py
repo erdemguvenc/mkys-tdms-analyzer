@@ -7,7 +7,6 @@ from analyzer.models.movement import Movement
 from analyzer.models.movement_type import MovementType
 from analyzer.parsers.mkys_csv import MKYSCsvParser
 
-
 SAMPLE_FILE = Path("sample_data/raw/giris_sorgulama.csv")
 
 
@@ -88,10 +87,7 @@ def test_all_movements_are_entry() -> None:
 
     movements = parser.parse(SAMPLE_FILE)
 
-    assert all(
-        movement.movement_type == MovementType.ENTRY
-        for movement in movements
-    )
+    assert all(movement.movement_type == MovementType.ENTRY for movement in movements)
 
 
 def test_all_movements_have_dates() -> None:
@@ -99,10 +95,7 @@ def test_all_movements_have_dates() -> None:
 
     movements = parser.parse(SAMPLE_FILE)
 
-    assert all(
-        movement.movement_date is not None
-        for movement in movements
-    )
+    assert all(movement.movement_date is not None for movement in movements)
 
 
 def test_all_movements_have_amount() -> None:
@@ -110,7 +103,4 @@ def test_all_movements_have_amount() -> None:
 
     movements = parser.parse(SAMPLE_FILE)
 
-    assert all(
-        movement.amount >= Decimal("0")
-        for movement in movements
-    )
+    assert all(movement.amount >= Decimal("0") for movement in movements)

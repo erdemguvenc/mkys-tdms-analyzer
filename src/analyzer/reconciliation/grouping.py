@@ -22,13 +22,9 @@ class MonthlyConsumptionGrouping:
     def group(
         movements: list[Movement],
     ) -> dict[tuple[int, int], Decimal]:
-
-        totals: dict[tuple[int, int], Decimal] = defaultdict(
-            lambda: Decimal("0")
-        )
+        totals: dict[tuple[int, int], Decimal] = defaultdict(lambda: Decimal("0"))
 
         for movement in movements:
-
             if movement.movement_type != MovementType.CONSUMPTION:
                 continue
 

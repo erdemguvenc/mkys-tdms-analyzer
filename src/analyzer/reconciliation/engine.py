@@ -14,23 +14,17 @@ class ReconciliationEngine:
     """
 
     def __init__(self) -> None:
-
         self._entry_matcher = EntryMatcher()
 
-        self._consumption_matcher = (
-            ConsumptionMatcher()
-        )
+        self._consumption_matcher = ConsumptionMatcher()
 
-        self._opening_matcher = (
-            OpeningMatcher()
-        )
+        self._opening_matcher = OpeningMatcher()
 
     def reconcile(
         self,
         mkys: list[Movement],
         tdms: list[Movement],
     ) -> ReconciliationResult:
-
         (
             matched,
             missing_tdms,
@@ -41,11 +35,9 @@ class ReconciliationEngine:
             tdms,
         )
 
-        consumption_differences = (
-            self._consumption_matcher.match(
-                mkys,
-                tdms,
-            )
+        consumption_differences = self._consumption_matcher.match(
+            mkys,
+            tdms,
         )
 
         (
@@ -62,16 +54,8 @@ class ReconciliationEngine:
             missing_in_tdms=missing_tdms,
             missing_in_mkys=missing_mkys,
             amount_differences=amount_differences,
-            consumption_differences=(
-                consumption_differences
-            ),
-            opening_matched=(
-                opening_matched
-            ),
-            opening_missing_in_tdms=(
-                opening_missing_tdms
-            ),
-            opening_missing_in_mkys=(
-                opening_missing_mkys
-            ),
+            consumption_differences=(consumption_differences),
+            opening_matched=(opening_matched),
+            opening_missing_in_tdms=(opening_missing_tdms),
+            opening_missing_in_mkys=(opening_missing_mkys),
         )

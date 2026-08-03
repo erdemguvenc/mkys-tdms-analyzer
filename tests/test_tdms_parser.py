@@ -7,7 +7,6 @@ from analyzer.models.movement import Movement
 from analyzer.models.movement_type import MovementType
 from analyzer.parsers.tdms_xls import TDMSXlsParser
 
-
 SAMPLE_FILE = Path("sample_data/raw/rapor.xls")
 
 
@@ -72,10 +71,7 @@ def test_all_movements_are_entry() -> None:
 
     movements = parser.parse(SAMPLE_FILE)
 
-    assert all(
-        movement.movement_type == MovementType.ENTRY
-        for movement in movements
-    )
+    assert all(movement.movement_type == MovementType.ENTRY for movement in movements)
 
 
 def test_all_movements_have_positive_amount() -> None:
@@ -83,10 +79,7 @@ def test_all_movements_have_positive_amount() -> None:
 
     movements = parser.parse(SAMPLE_FILE)
 
-    assert all(
-        movement.amount >= Decimal("0")
-        for movement in movements
-    )
+    assert all(movement.amount >= Decimal("0") for movement in movements)
 
 
 def test_all_movements_have_dates() -> None:
@@ -94,10 +87,7 @@ def test_all_movements_have_dates() -> None:
 
     movements = parser.parse(SAMPLE_FILE)
 
-    assert all(
-        movement.movement_date is not None
-        for movement in movements
-    )
+    assert all(movement.movement_date is not None for movement in movements)
 
 
 def test_all_movements_have_tif_number() -> None:
@@ -105,10 +95,7 @@ def test_all_movements_have_tif_number() -> None:
 
     movements = parser.parse(SAMPLE_FILE)
 
-    assert all(
-        isinstance(movement.tif_no, str)
-        for movement in movements
-    )
+    assert all(isinstance(movement.tif_no, str) for movement in movements)
 
 
 def test_all_movements_have_voucher_number() -> None:
@@ -116,7 +103,4 @@ def test_all_movements_have_voucher_number() -> None:
 
     movements = parser.parse(SAMPLE_FILE)
 
-    assert all(
-        isinstance(movement.voucher_no, str)
-        for movement in movements
-    )
+    assert all(isinstance(movement.voucher_no, str) for movement in movements)
