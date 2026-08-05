@@ -5,7 +5,7 @@ from analyzer.models.movement import Movement
 from analyzer.models.movement_type import MovementType
 
 
-def movement(
+def create_movement(
     *,
     year: int = 2026,
     month: int = 1,

@@ -104,7 +104,7 @@ def test_month_exists_only_in_mkys() -> None:
         movement(date(2026, 3, 5), "400"),
     ]
 
-    tdms = []
+    tdms: list[Movement] = []
 
     matcher = ConsumptionMatcher()
 
@@ -125,7 +125,7 @@ def test_month_exists_only_in_mkys() -> None:
 
 
 def test_month_exists_only_in_tdms() -> None:
-    mkys = []
+    mkys: list[Movement] = []
 
     tdms = [
         movement(date(2026, 4, 30), "900"),

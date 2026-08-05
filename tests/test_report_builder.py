@@ -11,9 +11,9 @@ from analyzer.reconciliation.difference import (
 )
 from analyzer.reconciliation.result import ReconciliationResult
 from analyzer.reports.excel_report_builder import ExcelReportBuilder
-from tests.helpers.movement_factory import movement
+from tests.helpers.movement_factory import create_movement
 from tests.helpers.reconciliation_result_factory import (
-    reconciliation_result,
+    create_reconciliation_result,
 )
 
 
@@ -22,7 +22,7 @@ def test_excel_report_is_created(
 ) -> None:
     result = ReconciliationResult(
         matched=[
-            movement(),
+            create_movement(),
         ],
     )
 
@@ -46,7 +46,7 @@ def test_excel_report_is_not_empty(
     builder = ExcelReportBuilder()
 
     builder.build(
-        reconciliation_result(),
+        create_reconciliation_result(),
         output,
     )
 
@@ -89,8 +89,8 @@ def test_amount_difference_sheet_is_created(
     tmp_path: Path,
 ) -> None:
     difference = AmountDifference(
-        mkys=movement(amount=Decimal("100")),
-        tdms=movement(amount=Decimal("120")),
+        mkys=create_movement(amount=Decimal("100")),
+        tdms=create_movement(amount=Decimal("120")),
     )
 
     result = ReconciliationResult(
@@ -123,7 +123,7 @@ def test_worksheet_page_setup(
     builder.build(
         ReconciliationResult(
             matched=[
-                movement(),
+                create_movement(),
             ],
         ),
         output,
@@ -139,10 +139,15 @@ def test_worksheet_page_setup(
 
     assert sheet.page_setup.orientation == sheet.ORIENTATION_LANDSCAPE
 
-    assert int(sheet.page_setup.paperSize) == 9
+    paper_size = sheet.page_setup.paperSize
+    assert paper_size is not None
+    assert int(paper_size) == 9
+
+    print_title_rows = sheet.print_title_rows
+    assert print_title_rows is not None
 
     assert (
-        sheet.print_title_rows.replace(
+        print_title_rows.replace(
             "$",
             "",
         )
@@ -160,7 +165,7 @@ def test_dashboard_sheet_exists(
     builder.build(
         ReconciliationResult(
             matched=[
-                movement(),
+                create_movement(),
             ],
         ),
         output,

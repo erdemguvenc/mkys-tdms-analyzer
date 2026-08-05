@@ -145,7 +145,7 @@ def test_reconcile_consumption_difference() -> None:
         )
     ]
 
-    tdms = []
+    tdms: list[Movement] = []
 
     result = engine.reconcile(
         mkys,

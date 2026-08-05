@@ -7,7 +7,7 @@ from analyzer.reports.analytics.warehouse_summary import WarehouseSummary
 from analyzer.reports.dashboard_summary import DashboardSummary
 
 
-def dashboard_summary(
+def create_dashboard_summary(
     *,
     total_records: int = 10,
     matched_records: int = 8,

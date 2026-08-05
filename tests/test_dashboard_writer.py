@@ -1,28 +1,30 @@
 from __future__ import annotations
 
+from typing import Any, cast
+
 from openpyxl import Workbook
 from openpyxl.chart import (
     BarChart,
     PieChart,
 )
+from openpyxl.worksheet.worksheet import Worksheet
 
 from analyzer.reports.dashboard_summary import DashboardSummary
 from analyzer.reports.dashboard_writer import DashboardWriter
 from tests.helpers.reconciliation_result_factory import (
-    reconciliation_result,
+    create_reconciliation_result,
 )
 
 
 def build_summary() -> DashboardSummary:
     return DashboardSummary.from_result(
-        reconciliation_result(),
+        create_reconciliation_result(),
     )
 
 
 def test_dashboard_title() -> None:
     workbook = Workbook()
-
-    worksheet = workbook.active
+    worksheet = cast(Worksheet, workbook.active)
 
     DashboardWriter().write_dashboard(
         worksheet,
@@ -34,8 +36,7 @@ def test_dashboard_title() -> None:
 
 def test_dashboard_kpi_titles() -> None:
     workbook = Workbook()
-
-    worksheet = workbook.active
+    worksheet = cast(Worksheet, workbook.active)
 
     DashboardWriter().write_dashboard(
         worksheet,
@@ -53,8 +54,7 @@ def test_dashboard_kpi_titles() -> None:
 
 def test_dashboard_kpi_values() -> None:
     workbook = Workbook()
-
-    worksheet = workbook.active
+    worksheet = cast(Worksheet, workbook.active)
 
     summary = build_summary()
 
@@ -74,8 +74,7 @@ def test_dashboard_kpi_values() -> None:
 
 def test_dashboard_prepared() -> None:
     workbook = Workbook()
-
-    worksheet = workbook.active
+    worksheet = cast(Worksheet, workbook.active)
 
     DashboardWriter().write_dashboard(
         worksheet,
@@ -83,21 +82,19 @@ def test_dashboard_prepared() -> None:
     )
 
     assert worksheet.freeze_panes == "A4"
-
     assert worksheet.auto_filter.ref is not None
 
 
 def test_dashboard_contains_pie_chart() -> None:
     workbook = Workbook()
-
-    worksheet = workbook.active
+    worksheet = cast(Worksheet, workbook.active)
 
     DashboardWriter().write_dashboard(
         worksheet,
         build_summary(),
     )
 
-    charts = worksheet._charts
+    charts = cast(list[Any], getattr(worksheet, "_charts"))
 
     assert len(charts) == 2
 
@@ -111,15 +108,14 @@ def test_dashboard_contains_pie_chart() -> None:
 
 def test_dashboard_contains_bar_chart() -> None:
     workbook = Workbook()
-
-    worksheet = workbook.active
+    worksheet = cast(Worksheet, workbook.active)
 
     DashboardWriter().write_dashboard(
         worksheet,
         build_summary(),
     )
 
-    charts = worksheet._charts
+    charts = cast(list[Any], getattr(worksheet, "_charts"))
 
     assert isinstance(
         charts[1],
@@ -131,15 +127,14 @@ def test_dashboard_contains_bar_chart() -> None:
 
 def test_dashboard_chart_types() -> None:
     workbook = Workbook()
-
-    worksheet = workbook.active
+    worksheet = cast(Worksheet, workbook.active)
 
     DashboardWriter().write_dashboard(
         worksheet,
         build_summary(),
     )
 
-    charts = worksheet._charts
+    charts = cast(list[Any], getattr(worksheet, "_charts"))
 
     assert len(charts) == 2
 
@@ -149,15 +144,14 @@ def test_dashboard_chart_types() -> None:
 
 def test_dashboard_chart_titles() -> None:
     workbook = Workbook()
-
-    worksheet = workbook.active
+    worksheet = cast(Worksheet, workbook.active)
 
     DashboardWriter().write_dashboard(
         worksheet,
         build_summary(),
     )
 
-    charts = worksheet._charts
+    charts = cast(list[Any], getattr(worksheet, "_charts"))
 
     assert len(charts) == 2
 
@@ -167,29 +161,21 @@ def test_dashboard_chart_titles() -> None:
 
 def test_dashboard_executive_summary() -> None:
     workbook = Workbook()
-
-    worksheet = workbook.active
+    worksheet = cast(Worksheet, workbook.active)
 
     DashboardWriter().write_dashboard(
         worksheet,
         build_summary(),
     )
 
-    assert worksheet["A2"].value.endswith(
-        "Executive Summary",
-    )
-
-    assert worksheet["A3"].value.startswith(
-        "Uzlaştırma Oranı",
-    )
-
+    assert worksheet["A2"].value.endswith("Executive Summary")
+    assert worksheet["A3"].value.startswith("Uzlaştırma Oranı")
     assert "kayıt başarıyla eşleşti" in worksheet["A4"].value
 
 
 def test_dashboard_quality_progress() -> None:
     workbook = Workbook()
-
-    worksheet = workbook.active
+    worksheet = cast(Worksheet, workbook.active)
 
     DashboardWriter().write_dashboard(
         worksheet,
@@ -197,14 +183,7 @@ def test_dashboard_quality_progress() -> None:
     )
 
     assert worksheet["J7"].value == "Kalite"
-
     assert worksheet["K7"].value is not None
-
     assert worksheet["K7"].number_format == "0%"
 
-    assert (
-        len(
-            worksheet.conditional_formatting,
-        )
-        == 1
-    )
+    assert len(worksheet.conditional_formatting) == 1
