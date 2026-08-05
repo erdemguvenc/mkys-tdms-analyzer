@@ -42,11 +42,25 @@ class TDMSXlsParser:
         self,
         file_path: Path,
     ) -> pd.DataFrame:
-        df = pd.read_excel(
-            file_path,
-            engine="xlrd",
-            header=None,
-        )
+        """
+        TDMS Excel dosyasını okur.
+
+        .xls  -> xlrd
+        .xlsx -> openpyxl
+        """
+
+        if file_path.suffix.lower() == ".xls":
+            df = pd.read_excel(
+                file_path,
+                engine="xlrd",
+                header=None,
+            )
+        else:
+            df = pd.read_excel(
+                file_path,
+                engine="openpyxl",
+                header=None,
+            )
 
         header_row = self._find_header_row(df)
 

@@ -7,7 +7,7 @@ from analyzer.models.movement import Movement
 from analyzer.models.movement_type import MovementType
 from analyzer.parsers.tdms_xls import TDMSXlsParser
 
-SAMPLE_FILE = Path("sample_data/raw/rapor.xls")
+SAMPLE_FILE = Path("tests/data/tdms/tdms_sample.xlsx")
 
 
 def test_parser_returns_movements() -> None:

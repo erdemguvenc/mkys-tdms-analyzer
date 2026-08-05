@@ -218,7 +218,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Local test data
-sample_data/raw/
+sample_data/
 
 # Excel temporary files
 ~$*.xlsx

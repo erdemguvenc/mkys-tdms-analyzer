@@ -7,7 +7,7 @@ from analyzer.models.movement import Movement
 from analyzer.models.movement_type import MovementType
 from analyzer.parsers.mkys_csv import MKYSCsvParser
 
-SAMPLE_FILE = Path("sample_data/raw/giris_sorgulama.csv")
+SAMPLE_FILE = Path("tests/data/mkys/mkys_sample.csv")
 
 
 def test_parser_returns_movements() -> None:
