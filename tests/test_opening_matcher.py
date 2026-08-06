@@ -1,37 +1,8 @@
 from __future__ import annotations
 
-from datetime import date
-from decimal import Decimal
-
 from analyzer.models.movement import Movement
-from analyzer.models.movement_type import MovementType
 from analyzer.reconciliation.opening_matcher import OpeningMatcher
-
-
-def create_movement(
-    *,
-    source: str,
-    tif_no: str,
-    amount: str,
-    description: str = "",
-) -> Movement:
-    return Movement(
-        source=source,
-        movement_type=MovementType.ENTRY,
-        movement_date=date(2026, 1, 1),
-        tif_no=tif_no,
-        voucher_no="",
-        document_no="",
-        invoice_no="",
-        amount=Decimal(amount),
-        description=description,
-        warehouse="",
-        budget_type="",
-        stock_code="",
-        stock_name="",
-        supplier="",
-        quantity=Decimal("0"),
-    )
+from tests.helpers.movement_factory import create_movement
 
 
 def test_opening_match_is_found() -> None:
