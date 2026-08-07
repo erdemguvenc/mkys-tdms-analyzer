@@ -24,7 +24,7 @@ class ReconciliationResult:
         TDMS'de olup MKYS'de bulunamayan giriş kayıtları.
 
     - amount_differences:
-        Aynı giriş hareketindeki tutar farklılıkları.
+        Giriş hareketlerindeki tutar farklılıkları.
 
     - consumption_differences:
         Aylık tüketim uzlaştırmasında oluşan farklar.
@@ -37,6 +37,18 @@ class ReconciliationResult:
 
     - opening_missing_in_mkys:
         TDMS açılış kayıtlarından MKYS'de bulunamayanlar.
+
+    - transfer_matched:
+        Eşleşen transfer kayıtları.
+
+    - transfer_missing_in_tdms:
+        MKYS'de olup TDMS'de bulunamayan transfer kayıtları.
+
+    - transfer_missing_in_mkys:
+        TDMS'de olup MKYS'de bulunamayan transfer kayıtları.
+
+    - transfer_amount_differences:
+        Aynı transfer hareketindeki tutar farklılıkları.
     """
 
     matched: list[Movement] = field(
@@ -68,5 +80,21 @@ class ReconciliationResult:
     )
 
     opening_missing_in_mkys: list[Movement] = field(
+        default_factory=list,
+    )
+
+    transfer_matched: list[Movement] = field(
+        default_factory=list,
+    )
+
+    transfer_missing_in_tdms: list[Movement] = field(
+        default_factory=list,
+    )
+
+    transfer_missing_in_mkys: list[Movement] = field(
+        default_factory=list,
+    )
+
+    transfer_amount_differences: list[AmountDifference] = field(
         default_factory=list,
     )

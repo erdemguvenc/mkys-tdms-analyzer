@@ -1,24 +1,22 @@
 from __future__ import annotations
 
 from analyzer.models.movement import Movement
+from analyzer.reconciliation.result import ReconciliationResult
 
 
 class OpeningMatcher:
     """
     MKYS ve TDMS açılış kayıtlarını uzlaştırır.
 
-    İlk sürümde:
-
-    - MKYS açılışı:
+    MKYS açılışı:
         tif_no == "0"
 
-    - TDMS açılışı:
+    TDMS açılışı:
         description içerisinde
         "MUHASEBE AÇILIŞ FİŞİ"
         geçen kayıt.
 
     Eşleştirme anahtarı:
-
         amount
     """
 
@@ -28,23 +26,13 @@ class OpeningMatcher:
         self,
         mkys: list[Movement],
         tdms: list[Movement],
-    ) -> tuple[
-        list[Movement],
-        list[Movement],
-        list[Movement],
-    ]:
-        mkys_openings = self._mkys_openings(
-            mkys,
-        )
+    ) -> ReconciliationResult:
+        mkys_openings = self._mkys_openings(mkys)
 
-        tdms_openings = self._tdms_openings(
-            tdms,
-        )
+        tdms_openings = self._tdms_openings(tdms)
 
         matched: list[Movement] = []
-
         missing_in_tdms: list[Movement] = []
-
         missing_in_mkys: list[Movement] = []
 
         remaining_tdms = tdms_openings.copy()
@@ -56,28 +44,18 @@ class OpeningMatcher:
             )
 
             if tdms_match is None:
-                missing_in_tdms.append(
-                    mkys_movement,
-                )
-
+                missing_in_tdms.append(mkys_movement)
                 continue
 
-            matched.append(
-                mkys_movement,
-            )
+            matched.append(mkys_movement)
+            remaining_tdms.remove(tdms_match)
 
-            remaining_tdms.remove(
-                tdms_match,
-            )
+        missing_in_mkys.extend(remaining_tdms)
 
-        missing_in_mkys.extend(
-            remaining_tdms,
-        )
-
-        return (
-            matched,
-            missing_in_tdms,
-            missing_in_mkys,
+        return ReconciliationResult(
+            matched=matched,
+            missing_in_tdms=missing_in_tdms,
+            missing_in_mkys=missing_in_mkys,
         )
 
     def _mkys_openings(
@@ -85,12 +63,7 @@ class OpeningMatcher:
         movements: list[Movement],
     ) -> list[Movement]:
         return [
-            movement
-            for movement in movements
-            if str(
-                movement.tif_no,
-            ).strip()
-            == "0"
+            movement for movement in movements if str(movement.tif_no).strip() == "0"
         ]
 
     def _tdms_openings(
@@ -100,10 +73,7 @@ class OpeningMatcher:
         return [
             movement
             for movement in movements
-            if self.OPENING_DESCRIPTION
-            in str(
-                movement.description,
-            ).upper()
+            if self.OPENING_DESCRIPTION in str(movement.description).upper()
         ]
 
     def _find_match(

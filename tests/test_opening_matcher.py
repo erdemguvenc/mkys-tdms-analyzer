@@ -25,14 +25,14 @@ def test_opening_match_is_found() -> None:
         )
     ]
 
-    matched, missing_tdms, missing_mkys = matcher.match(
+    result = matcher.match(
         mkys,
         tdms,
     )
 
-    assert len(matched) == 1
-    assert len(missing_tdms) == 0
-    assert len(missing_mkys) == 0
+    assert len(result.matched) == 1
+    assert len(result.missing_in_tdms) == 0
+    assert len(result.missing_in_mkys) == 0
 
 
 def test_missing_in_tdms() -> None:
@@ -48,14 +48,14 @@ def test_missing_in_tdms() -> None:
 
     tdms: list[Movement] = []
 
-    matched, missing_tdms, missing_mkys = matcher.match(
+    result = matcher.match(
         mkys,
         tdms,
     )
 
-    assert len(matched) == 0
-    assert len(missing_tdms) == 1
-    assert len(missing_mkys) == 0
+    assert len(result.matched) == 0
+    assert len(result.missing_in_tdms) == 1
+    assert len(result.missing_in_mkys) == 0
 
 
 def test_missing_in_mkys() -> None:
@@ -72,14 +72,14 @@ def test_missing_in_mkys() -> None:
         )
     ]
 
-    matched, missing_tdms, missing_mkys = matcher.match(
+    result = matcher.match(
         mkys,
         tdms,
     )
 
-    assert len(matched) == 0
-    assert len(missing_tdms) == 0
-    assert len(missing_mkys) == 1
+    assert len(result.matched) == 0
+    assert len(result.missing_in_tdms) == 0
+    assert len(result.missing_in_mkys) == 1
 
 
 def test_amount_difference_is_not_matched() -> None:
@@ -102,14 +102,14 @@ def test_amount_difference_is_not_matched() -> None:
         )
     ]
 
-    matched, missing_tdms, missing_mkys = matcher.match(
+    result = matcher.match(
         mkys,
         tdms,
     )
 
-    assert len(matched) == 0
-    assert len(missing_tdms) == 1
-    assert len(missing_mkys) == 1
+    assert len(result.matched) == 0
+    assert len(result.missing_in_tdms) == 1
+    assert len(result.missing_in_mkys) == 1
 
 
 def test_non_opening_records_are_ignored() -> None:
@@ -132,14 +132,14 @@ def test_non_opening_records_are_ignored() -> None:
         )
     ]
 
-    matched, missing_tdms, missing_mkys = matcher.match(
+    result = matcher.match(
         mkys,
         tdms,
     )
 
-    assert matched == []
-    assert missing_tdms == []
-    assert missing_mkys == []
+    assert len(result.matched) == 0
+    assert len(result.missing_in_tdms) == 0
+    assert len(result.missing_in_mkys) == 0
 
 
 def test_multiple_openings_are_matched() -> None:
@@ -173,11 +173,11 @@ def test_multiple_openings_are_matched() -> None:
         ),
     ]
 
-    matched, missing_tdms, missing_mkys = matcher.match(
+    result = matcher.match(
         mkys,
         tdms,
     )
 
-    assert len(matched) == 2
-    assert len(missing_tdms) == 0
-    assert len(missing_mkys) == 0
+    assert len(result.matched) == 2
+    assert len(result.missing_in_tdms) == 0
+    assert len(result.missing_in_mkys) == 0

@@ -307,3 +307,111 @@ def test_engine_matches_multiple_entries() -> None:
     assert not result.missing_in_tdms
     assert not result.missing_in_mkys
     assert not result.amount_differences
+
+
+def test_engine_matches_transfer() -> None:
+    engine = ReconciliationEngine()
+
+    mkys = [
+        create_movement(
+            source="MKYS",
+            tif_no="T-100",
+            amount=Decimal("100"),
+            movement_type=MovementType.TRANSFER,
+        )
+    ]
+
+    tdms = [
+        create_movement(
+            source="TDMS",
+            tif_no="T-100",
+            amount=Decimal("100"),
+            movement_type=MovementType.TRANSFER,
+        )
+    ]
+
+    result = engine.reconcile(
+        mkys,
+        tdms,
+    )
+
+    assert len(result.transfer_matched) == 1
+    assert not result.transfer_missing_in_tdms
+    assert not result.transfer_missing_in_mkys
+    assert not result.transfer_amount_differences
+
+
+def test_engine_detects_transfer_amount_difference() -> None:
+    engine = ReconciliationEngine()
+
+    mkys = [
+        create_movement(
+            source="MKYS",
+            tif_no="T-100",
+            amount=Decimal("100"),
+            movement_type=MovementType.TRANSFER,
+        )
+    ]
+
+    tdms = [
+        create_movement(
+            source="TDMS",
+            tif_no="T-100",
+            amount=Decimal("90"),
+            movement_type=MovementType.TRANSFER,
+        )
+    ]
+
+    result = engine.reconcile(
+        mkys,
+        tdms,
+    )
+
+    assert not result.transfer_matched
+    assert len(result.transfer_amount_differences) == 1
+    assert not result.transfer_missing_in_tdms
+    assert not result.transfer_missing_in_mkys
+
+
+def test_engine_detects_transfer_missing_in_tdms() -> None:
+    engine = ReconciliationEngine()
+
+    mkys = [
+        create_movement(
+            source="MKYS",
+            tif_no="T-100",
+            movement_type=MovementType.TRANSFER,
+        )
+    ]
+
+    result = engine.reconcile(
+        mkys,
+        [],
+    )
+
+    assert not result.transfer_matched
+    assert len(result.transfer_missing_in_tdms) == 1
+    assert not result.transfer_missing_in_mkys
+    assert not result.transfer_amount_differences
+
+
+def test_engine_detects_transfer_missing_in_mkys() -> None:
+    engine = ReconciliationEngine()
+
+    tdms = [
+        create_movement(
+            source="TDMS",
+            tif_no="T-100",
+            movement_type=MovementType.TRANSFER,
+        )
+    ]
+
+    result = engine.reconcile(
+        [],
+        tdms,
+    )
+
+    assert not result.transfer_matched
+    assert not result.transfer_missing_in_tdms
+    assert len(result.transfer_missing_in_mkys) == 1
+    assert not result.transfer_amount_differences
