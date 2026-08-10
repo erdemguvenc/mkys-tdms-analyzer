@@ -38,6 +38,18 @@ class ReconciliationResult:
     - opening_missing_in_mkys:
         TDMS açılış kayıtlarından MKYS'de bulunamayanlar.
 
+    - scrap_matched:
+        Eşleşen hurda kayıtları.
+
+    - scrap_missing_in_tdms:
+        MKYS'de olup TDMS'de bulunamayan hurda kayıtları.
+
+    - scrap_missing_in_mkys:
+        TDMS'de olup MKYS'de bulunamayan hurda kayıtları.
+
+    - scrap_amount_differences:
+        Aynı hurda hareketindeki tutar farklılıkları.
+
     - transfer_matched:
         Eşleşen transfer kayıtları.
 
@@ -80,6 +92,22 @@ class ReconciliationResult:
     )
 
     opening_missing_in_mkys: list[Movement] = field(
+        default_factory=list,
+    )
+
+    scrap_matched: list[Movement] = field(
+        default_factory=list,
+    )
+
+    scrap_missing_in_tdms: list[Movement] = field(
+        default_factory=list,
+    )
+
+    scrap_missing_in_mkys: list[Movement] = field(
+        default_factory=list,
+    )
+
+    scrap_amount_differences: list[AmountDifference] = field(
         default_factory=list,
     )
 

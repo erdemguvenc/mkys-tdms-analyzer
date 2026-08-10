@@ -415,3 +415,95 @@ def test_engine_detects_transfer_missing_in_mkys() -> None:
     assert not result.transfer_missing_in_tdms
     assert len(result.transfer_missing_in_mkys) == 1
     assert not result.transfer_amount_differences
+
+
+def test_engine_matches_scrap() -> None:
+    engine = ReconciliationEngine()
+
+    mkys = [
+        create_movement(
+            source="MKYS",
+            tif_no="S-100",
+            amount=Decimal("100"),
+            movement_type=MovementType.SCRAP,
+        )
+    ]
+
+    tdms = [
+        create_movement(
+            source="TDMS",
+            tif_no="S-100",
+            amount=Decimal("100"),
+            movement_type=MovementType.SCRAP,
+        )
+    ]
+
+    result = engine.reconcile(mkys, tdms)
+
+    assert len(result.scrap_matched) == 1
+    assert not result.scrap_missing_in_tdms
+    assert not result.scrap_missing_in_mkys
+    assert not result.scrap_amount_differences
+
+
+def test_engine_detects_scrap_amount_difference() -> None:
+    engine = ReconciliationEngine()
+
+    mkys = [
+        create_movement(
+            source="MKYS",
+            tif_no="S-100",
+            amount=Decimal("100"),
+            movement_type=MovementType.SCRAP,
+        )
+    ]
+
+    tdms = [
+        create_movement(
+            source="TDMS",
+            tif_no="S-100",
+            amount=Decimal("90"),
+            movement_type=MovementType.SCRAP,
+        )
+    ]
+
+    result = engine.reconcile(mkys, tdms)
+
+    assert not result.scrap_matched
+    assert len(result.scrap_amount_differences) == 1
+
+
+def test_engine_detects_scrap_missing_in_tdms() -> None:
+    engine = ReconciliationEngine()
+
+    mkys = [
+        create_movement(
+            source="MKYS",
+            tif_no="S-100",
+            amount=Decimal("100"),
+            movement_type=MovementType.SCRAP,
+        )
+    ]
+
+    result = engine.reconcile(mkys, [])
+
+    assert len(result.scrap_missing_in_tdms) == 1
+    assert not result.scrap_missing_in_mkys
+
+
+def test_engine_detects_scrap_missing_in_mkys() -> None:
+    engine = ReconciliationEngine()
+
+    tdms = [
+        create_movement(
+            source="TDMS",
+            tif_no="S-100",
+            amount=Decimal("100"),
+            movement_type=MovementType.SCRAP,
+        )
+    ]
+
+    result = engine.reconcile([], tdms)
+
+    assert not result.scrap_missing_in_tdms
+    assert len(result.scrap_missing_in_mkys) == 1

@@ -5,6 +5,7 @@ from analyzer.reconciliation.consumption_matcher import ConsumptionMatcher
 from analyzer.reconciliation.entry_matcher import EntryMatcher
 from analyzer.reconciliation.opening_matcher import OpeningMatcher
 from analyzer.reconciliation.result import ReconciliationResult
+from analyzer.reconciliation.scrap_matcher import ScrapMatcher
 from analyzer.reconciliation.transfer_matcher import TransferMatcher
 
 
@@ -18,6 +19,7 @@ class ReconciliationEngine:
         self._entry_matcher = EntryMatcher()
         self._transfer_matcher = TransferMatcher()
         self._consumption_matcher = ConsumptionMatcher()
+        self._scrap_matcher = ScrapMatcher()
 
     def reconcile(
         self,
@@ -35,6 +37,11 @@ class ReconciliationEngine:
         )
 
         transfer_result = self._transfer_matcher.match(
+            mkys,
+            tdms,
+        )
+
+        scrap_result = self._scrap_matcher.match(
             mkys,
             tdms,
         )
@@ -57,4 +64,8 @@ class ReconciliationEngine:
             transfer_missing_in_tdms=transfer_result.missing_in_tdms,
             transfer_missing_in_mkys=transfer_result.missing_in_mkys,
             transfer_amount_differences=transfer_result.amount_differences,
+            scrap_matched=scrap_result.matched,
+            scrap_missing_in_tdms=scrap_result.missing_in_tdms,
+            scrap_missing_in_mkys=scrap_result.missing_in_mkys,
+            scrap_amount_differences=scrap_result.amount_differences,
         )
