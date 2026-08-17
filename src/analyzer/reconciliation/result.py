@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 
 from analyzer.models.movement import Movement
 
+from .consumption import ConsumptionMatch
 from .difference import AmountDifference, ConsumptionDifference
 
 
@@ -76,6 +77,10 @@ class ReconciliationResult:
     )
 
     amount_differences: list[AmountDifference] = field(
+        default_factory=list,
+    )
+
+    consumption_matched: list[ConsumptionMatch] = field(
         default_factory=list,
     )
 
