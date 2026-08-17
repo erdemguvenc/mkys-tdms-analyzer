@@ -45,3 +45,28 @@ def test_reconciliation_rules():
         assert isinstance(rule, ReconciliationRule)
         assert rule.key is expected_key
         assert rule.cardinality is expected_cardinality
+
+
+def test_donation_uses_tif_one_to_one_rule():
+    rule = RECONCILIATION_RULES[MovementType.DONATION]
+
+    assert rule.key is ReconciliationKey.TIF
+    assert rule.cardinality is Cardinality.ONE_TO_ONE
+
+
+def test_count_surplus_uses_tif_one_to_one_rule():
+    rule = RECONCILIATION_RULES[MovementType.COUNT_SURPLUS]
+
+    assert rule.key is ReconciliationKey.TIF
+    assert rule.cardinality is Cardinality.ONE_TO_ONE
+
+
+def test_count_deficit_uses_tif_one_to_one_rule():
+    rule = RECONCILIATION_RULES[MovementType.COUNT_DEFICIT]
+
+    assert rule.key is ReconciliationKey.TIF
+    assert rule.cardinality is Cardinality.ONE_TO_ONE
+
+
+def test_other_has_no_reconciliation_rule():
+    assert MovementType.OTHER not in RECONCILIATION_RULES

@@ -634,3 +634,260 @@ def test_entry_with_none_tif_is_not_reconciled():
     assert result.missing_in_tdms == []
     assert result.missing_in_mkys == []
     assert result.amount_differences == []
+
+
+def test_donation_one_to_one_match():
+    """
+    DONATION hareketleri TİF üzerinden birebir eşleşmelidir.
+    """
+    mkys = [
+        make_movement(
+            tif_no="DON-001",
+            movement_type=MovementType.DONATION,
+            movement_date=date(2026, 2, 10),
+            amount="1500.00",
+        )
+    ]
+
+    tdms = [
+        make_movement(
+            tif_no="DON-001",
+            movement_type=MovementType.DONATION,
+            movement_date=date(2026, 2, 10),
+            amount="1500.00",
+        )
+    ]
+
+    result = Reconciler().reconcile(mkys, tdms)
+
+    assert result.matched == [mkys[0]]
+    assert result.missing_in_tdms == []
+    assert result.missing_in_mkys == []
+    assert result.amount_differences == []
+
+
+def test_other_movement_type_is_not_reconciled():
+    """
+    OTHER hareket türü için reconciliation kuralı olmadığı için
+    Reconciler bu kayıtları mevcut sonuç alanlarına taşımamalıdır.
+    """
+    mkys = [
+        make_movement(
+            tif_no="OTHER-001",
+            movement_type=MovementType.OTHER,
+            movement_date=date(2026, 6, 15),
+            amount="100.00",
+        )
+    ]
+
+    tdms = [
+        make_movement(
+            tif_no="OTHER-001",
+            movement_type=MovementType.OTHER,
+            movement_date=date(2026, 6, 15),
+            amount="100.00",
+        )
+    ]
+
+    result = Reconciler().reconcile(mkys, tdms)
+
+    assert result.matched == []
+    assert result.missing_in_tdms == []
+    assert result.missing_in_mkys == []
+    assert result.amount_differences == []
+    assert result.consumption_matched == []
+    assert result.consumption_differences == []
+
+
+def test_duplicate_tif_in_mkys_uses_last_record():
+    """
+    Aynı TİF MKYS'de iki kez bulunduğunda mevcut ONE_TO_ONE
+    implementasyonunda son kayıt dictionary'de kalır.
+    """
+    first = make_movement(
+        tif_no="TIF-DUP-001",
+        movement_type=MovementType.ENTRY,
+        movement_date=date(2026, 1, 10),
+        amount="100.00",
+    )
+
+    second = make_movement(
+        tif_no="TIF-DUP-001",
+        movement_type=MovementType.ENTRY,
+        movement_date=date(2026, 1, 11),
+        amount="200.00",
+    )
+
+    tdms = [
+        make_movement(
+            tif_no="TIF-DUP-001",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 1, 11),
+            amount="200.00",
+        )
+    ]
+
+    result = Reconciler().reconcile(
+        [first, second],
+        tdms,
+    )
+
+    assert result.matched == [second]
+    assert result.missing_in_tdms == []
+    assert result.missing_in_mkys == []
+    assert result.amount_differences == []
+
+
+def test_duplicate_tif_in_tdms_uses_last_record():
+    """
+    Aynı TİF TDMS'de iki kez bulunduğunda mevcut ONE_TO_ONE
+    implementasyonunda son kayıt dictionary'de kalır.
+    """
+    mkys = [
+        make_movement(
+            tif_no="TIF-DUP-002",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 2, 10),
+            amount="300.00",
+        )
+    ]
+
+    first = make_movement(
+        tif_no="TIF-DUP-002",
+        movement_type=MovementType.ENTRY,
+        movement_date=date(2026, 2, 10),
+        amount="100.00",
+    )
+
+    second = make_movement(
+        tif_no="TIF-DUP-002",
+        movement_type=MovementType.ENTRY,
+        movement_date=date(2026, 2, 11),
+        amount="300.00",
+    )
+
+    result = Reconciler().reconcile(
+        mkys,
+        [first, second],
+    )
+
+    assert result.matched == [mkys[0]]
+    assert result.missing_in_tdms == []
+    assert result.missing_in_mkys == []
+    assert result.amount_differences == []
+
+
+def test_one_to_one_movement_with_none_tif_is_ignored():
+    """
+    TIF numarası olmayan ONE_TO_ONE hareketi mevcut implementasyonda
+    reconciliation dışında kalır.
+    """
+    mkys = [
+        make_movement(
+            tif_no=None,
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 3, 5),
+            amount="100.00",
+        )
+    ]
+
+    tdms = []
+
+    result = Reconciler().reconcile(
+        mkys,
+        tdms,
+    )
+
+    assert result.matched == []
+    assert result.missing_in_tdms == []
+    assert result.missing_in_mkys == []
+    assert result.amount_differences == []
+
+
+def test_tdms_one_to_one_movement_with_none_tif_is_ignored():
+    """
+    TDMS tarafında TIF numarası olmayan ONE_TO_ONE hareketi
+    mevcut implementasyonda reconciliation dışında kalır.
+    """
+    mkys = []
+
+    tdms = [
+        make_movement(
+            tif_no=None,
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 3, 5),
+            amount="100.00",
+        )
+    ]
+
+    result = Reconciler().reconcile(
+        mkys,
+        tdms,
+    )
+
+    assert result.matched == []
+    assert result.missing_in_tdms == []
+    assert result.missing_in_mkys == []
+    assert result.amount_differences == []
+
+
+def test_consumption_same_month_multiple_tdms_records_are_summed():
+    """
+    Aynı ayda birden fazla TDMS tüketim kaydı varsa,
+    kayıtlar aylık toplam üzerinden birlikte değerlendirilmelidir.
+    """
+    mkys = [
+        make_movement(
+            tif_no="TIF-C-001",
+            movement_type=MovementType.CONSUMPTION,
+            movement_date=date(2026, 4, 5),
+            amount="100.00",
+        ),
+        make_movement(
+            tif_no="TIF-C-002",
+            movement_type=MovementType.CONSUMPTION,
+            movement_date=date(2026, 4, 12),
+            amount="150.00",
+        ),
+        make_movement(
+            tif_no="TIF-C-003",
+            movement_type=MovementType.CONSUMPTION,
+            movement_date=date(2026, 4, 25),
+            amount="250.00",
+        ),
+    ]
+
+    tdms = [
+        make_movement(
+            tif_no=None,
+            movement_type=MovementType.CONSUMPTION,
+            movement_date=date(2026, 4, 15),
+            amount="200.00",
+        ),
+        make_movement(
+            tif_no=None,
+            movement_type=MovementType.CONSUMPTION,
+            movement_date=date(2026, 4, 30),
+            amount="300.00",
+        ),
+    ]
+
+    result = Reconciler().reconcile(
+        mkys,
+        tdms,
+    )
+
+    assert result.matched == []
+    assert result.missing_in_tdms == []
+    assert result.missing_in_mkys == []
+    assert result.amount_differences == []
+    assert result.consumption_differences == []
+
+    assert len(result.consumption_matched) == 1
+
+    match = result.consumption_matched[0]
+
+    assert match.year == 2026
+    assert match.month == 4
+    assert match.mkys_amount == Decimal("500.00")
+    assert match.tdms_amount == Decimal("500.00")
