@@ -4,6 +4,7 @@ from decimal import Decimal
 from analyzer.models.movement import Movement
 from analyzer.models.movement_type import MovementType
 from analyzer.reconciliation.consumption import ConsumptionMatch
+from analyzer.reconciliation.duplicate import DuplicateMovement
 from analyzer.reconciliation.result import ReconciliationResult
 
 
@@ -187,3 +188,93 @@ def test_reconciliation_result_stores_consumption_matches():
     assert stored_match.month == 1
     assert stored_match.mkys_amount == Decimal("500.00")
     assert stored_match.tdms_amount == Decimal("500.00")
+
+
+def test_reconciliation_result_duplicate_movements_is_empty_by_default():
+    result = ReconciliationResult()
+
+    assert result.duplicate_movements == []
+
+
+def make_movement(
+    *,
+    tif_no: str,
+    movement_type: MovementType = MovementType.ENTRY,
+    movement_date: date = date(2026, 1, 1),
+    amount: str = "100.00",
+) -> Movement:
+    return Movement(
+        source="test",
+        movement_type=movement_type,
+        movement_date=movement_date,
+        tif_no=tif_no,
+        voucher_no=None,
+        document_no=None,
+        invoice_no=None,
+        amount=Decimal(amount),
+        description="test movement",
+        warehouse="",
+        budget_type="",
+        stock_code="",
+        stock_name="",
+        supplier="",
+        quantity=Decimal("1"),
+    )
+
+
+def test_reconciliation_result_accepts_duplicate_movement():
+    movement_1 = make_movement(
+        tif_no="TIF-DUP-001",
+        movement_type=MovementType.ENTRY,
+        movement_date=date(2026, 1, 10),
+        amount="100.00",
+    )
+
+    movement_2 = make_movement(
+        tif_no="TIF-DUP-001",
+        movement_type=MovementType.ENTRY,
+        movement_date=date(2026, 1, 11),
+        amount="200.00",
+    )
+
+    duplicate = DuplicateMovement(
+        tif_no="TIF-DUP-001",
+        movements=[movement_1, movement_2],
+    )
+
+    result = ReconciliationResult(
+        duplicate_movements=[duplicate],
+    )
+
+    assert result.duplicate_movements == [duplicate]
+
+
+def test_reconciliation_result_preserves_duplicate_details():
+    movement_1 = make_movement(
+        tif_no="TIF-DUP-002",
+        movement_type=MovementType.ENTRY,
+        movement_date=date(2026, 2, 10),
+        amount="100.00",
+    )
+
+    movement_2 = make_movement(
+        tif_no="TIF-DUP-002",
+        movement_type=MovementType.ENTRY,
+        movement_date=date(2026, 2, 11),
+        amount="200.00",
+    )
+
+    duplicate = DuplicateMovement(
+        tif_no="TIF-DUP-002",
+        movements=[movement_1, movement_2],
+    )
+
+    result = ReconciliationResult(
+        duplicate_movements=[duplicate],
+    )
+
+    stored_duplicate = result.duplicate_movements[0]
+
+    assert stored_duplicate.tif_no == "TIF-DUP-002"
+    assert stored_duplicate.movements == [movement_1, movement_2]
+    assert len(stored_duplicate.movements) == 2

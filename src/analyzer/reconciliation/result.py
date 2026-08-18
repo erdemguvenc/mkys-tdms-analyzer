@@ -6,6 +6,7 @@ from analyzer.models.movement import Movement
 
 from .consumption import ConsumptionMatch
 from .difference import AmountDifference, ConsumptionDifference
+from .duplicate import DuplicateMovement
 
 
 @dataclass(slots=True)
@@ -27,8 +28,15 @@ class ReconciliationResult:
     - amount_differences:
         Giriş hareketlerindeki tutar farklılıkları.
 
+    - consumption_matched:
+        Aylık tüketim uzlaştırmasında eşleşen aylar.
+
     - consumption_differences:
         Aylık tüketim uzlaştırmasında oluşan farklar.
+
+    - duplicate_movements:
+        ONE_TO_ONE reconciliation kapsamında aynı TİF numarasıyla
+        birden fazla bulunan hareketler.
 
     - opening_matched:
         Eşleşen açılış kayıtları.
@@ -85,6 +93,10 @@ class ReconciliationResult:
     )
 
     consumption_differences: list[ConsumptionDifference] = field(
+        default_factory=list,
+    )
+
+    duplicate_movements: list[DuplicateMovement] = field(
         default_factory=list,
     )
 

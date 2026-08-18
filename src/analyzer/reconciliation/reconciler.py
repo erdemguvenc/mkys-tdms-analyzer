@@ -8,6 +8,7 @@ from analyzer.models.movement import Movement
 
 from .consumption import ConsumptionMatch
 from .difference import AmountDifference, ConsumptionDifference
+from .duplicate import DuplicateMovement
 from .result import ReconciliationResult
 from .rules import (
     RECONCILIATION_RULES,
@@ -20,13 +21,19 @@ class Reconciler:
     """
     MKYS ve TDMS hareketlerini reconciliation kurallarına göre uzlaştırır.
 
-    Bu ilk implementasyon yalnızca iki temel stratejiyi destekler:
+    Desteklenen stratejiler:
 
     - TIF + ONE_TO_ONE
     - MONTH + MANY_TO_ONE
 
     Hareket türünün hangi stratejiye tabi olduğu
     RECONCILIATION_RULES üzerinden belirlenir.
+
+    Duplicate TİF kayıtları normal reconciliation işleminden
+    önce tespit edilir ve normal reconciliation akışından çıkarılır.
+
+    Duplicate kayıtlar yalnızca duplicate_movements içinde raporlanır;
+    matched, missing_in_* ve amount_differences sonuçlarına dahil edilmez.
     """
 
     def reconcile(
@@ -56,6 +63,30 @@ class Reconciler:
 
         result = ReconciliationResult()
 
+        # ---------------------------------------------------------
+        # 1. Duplicate kayıtları tespit et
+        # ---------------------------------------------------------
+
+        mkys_duplicates = self._find_duplicates(mkys)
+        tdms_duplicates = self._find_duplicates(tdms)
+
+        result.duplicate_movements.extend(mkys_duplicates)
+        result.duplicate_movements.extend(tdms_duplicates)
+
+        # ---------------------------------------------------------
+        # 2. Duplicate TİF numaralarını belirle
+        # ---------------------------------------------------------
+
+        mkys_duplicate_tifs = {duplicate.tif_no for duplicate in mkys_duplicates}
+
+        tdms_duplicate_tifs = {duplicate.tif_no for duplicate in tdms_duplicates}
+
+        duplicate_tifs = mkys_duplicate_tifs | tdms_duplicate_tifs
+
+        # ---------------------------------------------------------
+        # 3. Hareket türlerine göre reconciliation yap
+        # ---------------------------------------------------------
+
         movement_types = {movement.movement_type for movement in mkys} | {
             movement.movement_type for movement in tdms
         }
@@ -63,15 +94,40 @@ class Reconciler:
         for movement_type in movement_types:
             rule = RECONCILIATION_RULES.get(movement_type)
 
+            # OTHER gibi reconciliation kuralı olmayan
+            # hareket türleri bilinçli olarak reconciliation
+            # dışında bırakılır.
             if rule is None:
                 continue
 
+            # -----------------------------------------------------
+            # Duplicate kayıtları normal reconciliation'dan çıkar.
+            #
+            # Bu önemli bir invariant'tır:
+            #
+            # duplicate TİF:
+            #   -> matched değil
+            #   -> amount_difference değil
+            #   -> missing_in_tdms değil
+            #   -> missing_in_mkys değil
+            # -----------------------------------------------------
+
             mkys_group = [
-                movement for movement in mkys if movement.movement_type == movement_type
+                movement
+                for movement in mkys
+                if (
+                    movement.movement_type == movement_type
+                    and movement.tif_no not in duplicate_tifs
+                )
             ]
 
             tdms_group = [
-                movement for movement in tdms if movement.movement_type == movement_type
+                movement
+                for movement in tdms
+                if (
+                    movement.movement_type == movement_type
+                    and movement.tif_no not in duplicate_tifs
+                )
             ]
 
             if rule.cardinality is Cardinality.ONE_TO_ONE:
@@ -92,6 +148,55 @@ class Reconciler:
 
         return result
 
+    @staticmethod
+    def _find_duplicates(
+        movements: list[Movement],
+    ) -> list[DuplicateMovement]:
+        """
+        Aynı TİF numarasına sahip birden fazla hareketi bulur.
+
+        ``tif_no=None`` olan kayıtlar duplicate olarak değerlendirilmez.
+
+        Aynı TİF numarası birden fazla kez bulunuyorsa tek bir
+        DuplicateMovement oluşturulur.
+
+        Örnek:
+
+            TIF-001
+            TIF-001
+            TIF-001
+
+        sonucu:
+
+            [
+                DuplicateMovement(
+                    tif_no="TIF-001",
+                    movements=[...],
+                )
+            ]
+        """
+
+        movements_by_tif: dict[str, list[Movement]] = defaultdict(list)
+
+        for movement in movements:
+            if movement.tif_no is None:
+                continue
+
+            movements_by_tif[movement.tif_no].append(movement)
+
+        duplicates: list[DuplicateMovement] = []
+
+        for tif_no, tif_movements in movements_by_tif.items():
+            if len(tif_movements) > 1:
+                duplicates.append(
+                    DuplicateMovement(
+                        tif_no=tif_no,
+                        movements=tif_movements,
+                    )
+                )
+
+        return duplicates
+
     def _reconcile_one_to_one(
         self,
         mkys_movements: list[Movement],
@@ -107,6 +212,9 @@ class Reconciler:
 
         Eşleşen kayıtların tutarları farklıysa
         AmountDifference oluşturulur.
+
+        Duplicate kayıtlar bu metoda ulaşmadan önce
+        reconcile() tarafından filtrelenmiş olur.
         """
 
         if key is not ReconciliationKey.TIF:
@@ -132,15 +240,20 @@ class Reconciler:
             mkys_movement = mkys_by_tif.get(tif_no)
             tdms_movement = tdms_by_tif.get(tif_no)
 
+            # TDMS'de var, MKYS'de yok.
             if mkys_movement is None:
                 if tdms_movement is not None:
                     result.missing_in_mkys.append(tdms_movement)
+
                 continue
 
+            # MKYS'de var, TDMS'de yok.
             if tdms_movement is None:
                 result.missing_in_tdms.append(mkys_movement)
+
                 continue
 
+            # İki tarafta da var fakat tutarlar farklı.
             if mkys_movement.amount != tdms_movement.amount:
                 result.amount_differences.append(
                     AmountDifference(
@@ -148,8 +261,10 @@ class Reconciler:
                         tdms=tdms_movement,
                     )
                 )
+
                 continue
 
+            # TİF ve tutar eşleşiyor.
             result.matched.append(mkys_movement)
 
     def _reconcile_many_to_one(
@@ -175,6 +290,9 @@ class Reconciler:
                 Ocak → 500 TL
 
         sonucunda tek bir ConsumptionMatch oluşturulur.
+
+        Duplicate TİF içeren hareketler reconcile() tarafından
+        bu metoda gönderilmeden önce filtrelenir.
         """
 
         if key is not ReconciliationKey.MONTH:
@@ -183,14 +301,22 @@ class Reconciler:
                 "ReconciliationKey.MONTH destekliyor."
             )
 
-        mkys_by_month: dict[tuple[int, int], list[Movement]] = defaultdict(list)
-        tdms_by_month: dict[tuple[int, int], list[Movement]] = defaultdict(list)
+        mkys_by_month: dict[
+            tuple[int, int],
+            list[Movement],
+        ] = defaultdict(list)
+
+        tdms_by_month: dict[
+            tuple[int, int],
+            list[Movement],
+        ] = defaultdict(list)
 
         for movement in mkys_movements:
             month_key = (
                 movement.movement_date.year,
                 movement.movement_date.month,
             )
+
             mkys_by_month[month_key].append(movement)
 
         for movement in tdms_movements:
@@ -198,6 +324,7 @@ class Reconciler:
                 movement.movement_date.year,
                 movement.movement_date.month,
             )
+
             tdms_by_month[month_key].append(movement)
 
         all_months = set(mkys_by_month) | set(tdms_by_month)
@@ -232,6 +359,7 @@ class Reconciler:
                         tdms_amount=tdms_amount,
                     )
                 )
+
                 continue
 
             result.consumption_differences.append(

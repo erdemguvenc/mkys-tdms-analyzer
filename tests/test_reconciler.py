@@ -699,84 +699,6 @@ def test_other_movement_type_is_not_reconciled():
     assert result.consumption_differences == []
 
 
-def test_duplicate_tif_in_mkys_uses_last_record():
-    """
-    Aynı TİF MKYS'de iki kez bulunduğunda mevcut ONE_TO_ONE
-    implementasyonunda son kayıt dictionary'de kalır.
-    """
-    first = make_movement(
-        tif_no="TIF-DUP-001",
-        movement_type=MovementType.ENTRY,
-        movement_date=date(2026, 1, 10),
-        amount="100.00",
-    )
-
-    second = make_movement(
-        tif_no="TIF-DUP-001",
-        movement_type=MovementType.ENTRY,
-        movement_date=date(2026, 1, 11),
-        amount="200.00",
-    )
-
-    tdms = [
-        make_movement(
-            tif_no="TIF-DUP-001",
-            movement_type=MovementType.ENTRY,
-            movement_date=date(2026, 1, 11),
-            amount="200.00",
-        )
-    ]
-
-    result = Reconciler().reconcile(
-        [first, second],
-        tdms,
-    )
-
-    assert result.matched == [second]
-    assert result.missing_in_tdms == []
-    assert result.missing_in_mkys == []
-    assert result.amount_differences == []
-
-
-def test_duplicate_tif_in_tdms_uses_last_record():
-    """
-    Aynı TİF TDMS'de iki kez bulunduğunda mevcut ONE_TO_ONE
-    implementasyonunda son kayıt dictionary'de kalır.
-    """
-    mkys = [
-        make_movement(
-            tif_no="TIF-DUP-002",
-            movement_type=MovementType.ENTRY,
-            movement_date=date(2026, 2, 10),
-            amount="300.00",
-        )
-    ]
-
-    first = make_movement(
-        tif_no="TIF-DUP-002",
-        movement_type=MovementType.ENTRY,
-        movement_date=date(2026, 2, 10),
-        amount="100.00",
-    )
-
-    second = make_movement(
-        tif_no="TIF-DUP-002",
-        movement_type=MovementType.ENTRY,
-        movement_date=date(2026, 2, 11),
-        amount="300.00",
-    )
-
-    result = Reconciler().reconcile(
-        mkys,
-        [first, second],
-    )
-
-    assert result.matched == [mkys[0]]
-    assert result.missing_in_tdms == []
-    assert result.missing_in_mkys == []
-    assert result.amount_differences == []
-
-
 def test_one_to_one_movement_with_none_tif_is_ignored():
     """
     TIF numarası olmayan ONE_TO_ONE hareketi mevcut implementasyonda
@@ -891,3 +813,236 @@ def test_consumption_same_month_multiple_tdms_records_are_summed():
     assert match.month == 4
     assert match.mkys_amount == Decimal("500.00")
     assert match.tdms_amount == Decimal("500.00")
+
+
+def test_duplicate_tif_in_mkys_is_reported():
+    """
+    Aynı TİF numarasına sahip birden fazla MKYS kaydı
+    duplicate_movements olarak raporlanmalıdır.
+    """
+    mkys = [
+        make_movement(
+            tif_no="TIF-DUP-001",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 1, 10),
+            amount="100.00",
+        ),
+        make_movement(
+            tif_no="TIF-DUP-001",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 1, 11),
+            amount="200.00",
+        ),
+    ]
+
+    tdms = []
+
+    result = Reconciler().reconcile(mkys, tdms)
+
+    assert len(result.duplicate_movements) == 1
+
+    duplicate = result.duplicate_movements[0]
+
+    assert duplicate.tif_no == "TIF-DUP-001"
+    assert duplicate.movements == mkys
+
+    assert result.matched == []
+
+
+def test_duplicate_tif_in_tdms_is_reported():
+    """
+    Aynı TİF numarasına sahip birden fazla TDMS kaydı
+    duplicate_movements olarak raporlanmalıdır.
+    """
+    mkys = []
+
+    tdms = [
+        make_movement(
+            tif_no="TIF-DUP-002",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 2, 10),
+            amount="100.00",
+        ),
+        make_movement(
+            tif_no="TIF-DUP-002",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 2, 11),
+            amount="200.00",
+        ),
+    ]
+
+    result = Reconciler().reconcile(mkys, tdms)
+
+    assert len(result.duplicate_movements) == 1
+
+    duplicate = result.duplicate_movements[0]
+
+    assert duplicate.tif_no == "TIF-DUP-002"
+    assert duplicate.movements == tdms
+
+    assert result.matched == []
+
+
+def test_more_than_two_same_tif_is_reported_as_one_duplicate_group():
+    """
+    Aynı TİF üç veya daha fazla kez bulunuyorsa,
+    tek bir DuplicateMovement grubu oluşturulmalıdır.
+    """
+    mkys = [
+        make_movement(
+            tif_no="TIF-DUP-003",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 3, 1),
+            amount="100.00",
+        ),
+        make_movement(
+            tif_no="TIF-DUP-003",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 3, 2),
+            amount="150.00",
+        ),
+        make_movement(
+            tif_no="TIF-DUP-003",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 3, 3),
+            amount="250.00",
+        ),
+    ]
+
+    result = Reconciler().reconcile(mkys, [])
+
+    assert len(result.duplicate_movements) == 1
+
+    duplicate = result.duplicate_movements[0]
+
+    assert duplicate.tif_no == "TIF-DUP-003"
+    assert len(duplicate.movements) == 3
+    assert duplicate.movements == mkys
+
+
+def test_different_tifs_are_not_reported_as_duplicates():
+    """
+    Farklı TİF numaraları duplicate değildir.
+    """
+    mkys = [
+        make_movement(
+            tif_no="TIF-001",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 4, 1),
+            amount="100.00",
+        ),
+        make_movement(
+            tif_no="TIF-002",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 4, 2),
+            amount="200.00",
+        ),
+    ]
+
+    result = Reconciler().reconcile(mkys, [])
+
+    assert result.duplicate_movements == []
+
+
+def test_none_tif_numbers_are_not_reported_as_duplicates():
+    """
+    tif_no=None olan kayıtlar duplicate TİF kontrolüne dahil edilmemelidir.
+    """
+    mkys = [
+        make_movement(
+            tif_no=None,
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 5, 1),
+            amount="100.00",
+        ),
+        make_movement(
+            tif_no=None,
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 5, 2),
+            amount="200.00",
+        ),
+    ]
+
+    result = Reconciler().reconcile(mkys, [])
+
+    assert result.duplicate_movements == []
+
+
+def test_duplicate_tif_is_not_reported_as_missing():
+    """
+    Duplicate TİF, duplicate_movements içinde raporlanmalıdır;
+    ancak normal missing_in_tdms / missing_in_mkys sonuçlarına
+    dahil edilmemelidir.
+    """
+    mkys = [
+        make_movement(
+            tif_no="TIF-DUP-004",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 4, 10),
+            amount="100.00",
+        ),
+        make_movement(
+            tif_no="TIF-DUP-004",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 4, 11),
+            amount="200.00",
+        ),
+    ]
+
+    tdms = [
+        make_movement(
+            tif_no="TIF-DUP-004",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 4, 30),
+            amount="300.00",
+        ),
+    ]
+
+    result = Reconciler().reconcile(mkys, tdms)
+
+    assert len(result.duplicate_movements) == 1
+    assert result.duplicate_movements[0].tif_no == "TIF-DUP-004"
+
+    assert result.missing_in_tdms == []
+    assert result.missing_in_mkys == []
+
+
+def test_duplicate_tif_does_not_produce_matched_or_amount_difference():
+    """
+    Duplicate TİF normal birebir reconciliation'a dahil edilmemelidir.
+
+    Dolayısıyla duplicate kayıt için:
+    - matched oluşmamalı
+    - amount_differences oluşmamalı
+    """
+    mkys = [
+        make_movement(
+            tif_no="TIF-DUP-005",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 5, 10),
+            amount="100.00",
+        ),
+        make_movement(
+            tif_no="TIF-DUP-005",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 5, 11),
+            amount="150.00",
+        ),
+    ]
+
+    tdms = [
+        make_movement(
+            tif_no="TIF-DUP-005",
+            movement_type=MovementType.ENTRY,
+            movement_date=date(2026, 5, 31),
+            amount="250.00",
+        ),
+    ]
+
+    result = Reconciler().reconcile(mkys, tdms)
+
+    assert len(result.duplicate_movements) == 1
+    assert result.duplicate_movements[0].tif_no == "TIF-DUP-005"
+
+    assert result.matched == []
+    assert result.amount_differences == []
